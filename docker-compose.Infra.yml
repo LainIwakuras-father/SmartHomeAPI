@@ -1,0 +1,46 @@
+services:
+  redis-cache:
+    image: redis:7-alpine
+    container_name: redis-cache
+    ports:
+    - "6379:6379"
+  
+  timescaledb:
+   image: timescale/timescaledb:latest-pg14
+   container_name: timescaledb
+   ports:
+    - "5432:5432"
+   environment:
+      POSTGRES_PASSWORD: industrial123
+      POSTGRES_DB: industrial
+      POSTGRES_USER: postgres
+   volumes:
+   - ~/docker/timescaledb/data:/var/lib/postgresql/data
+
+  rabbitmq_queue:
+    image: rabbitmq:3-management
+    container_name: rabbitmq_queue
+    ports:
+      - "5672:5672" # Standard AMQP port
+      - "15672:15672" # Management UI port
+      - "1883:1883"   # MQTT
+      - "8883:8883"   # MQTT over SSL
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+      RABBITMQ_DEFAULT_VHOST: /
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./enabled_plugins:/etc/rabbitmq/enabled_plugins
+    networks:
+      - industrial_networks
+
+volumes:
+   rabbitmq_data: 
+   timescaledb_data:
+    driver: local
+
+networks:
+    industrial_networks:
+         driver: bridge  

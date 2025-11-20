@@ -1,0 +1,42 @@
+protobuf
+syntax = "proto3";
+
+option csharp_namespace = "SmartHome.Grpc";
+
+package industrial;
+
+import "google/protobuf/timestamp.proto";
+
+Service IndustrialDataService {
+ rpc StreamSensorData (stream SensorDataRequest) returns (stream SensorDataResponse);
+ rpc GetHistoricalData (HistoricalDataRequest) returns (HistoricalDataResponse);
+ rpc GetSystemStatistics (StatisticsRequest) returns (StatisticsResponse);
+}
+message SensorDataRequest {
+ repeated string sensor_ids = 1;
+}
+message SensorDataResponse {
+ string sensor_id = 1;
+ double value = 2;
+ google.protobuf.Timestamp timestamp = 3;
+ 
+}
+message HistoricalDataRequest {
+ string sensor_id = 1;
+ google.protobuf.Timestamp start_time = 2;
+ google.protobuf.Timestamp end_time = 3;
+ int32 max_points = 4;
+}
+message HistoricalDataResponse {
+ repeated SensorDataResponse data = 1;
+}
+message StatisticsRequest {
+ string sensor_id = 1;
+ google.protobuf.Timestamp time_window = 2;
+}
+message StatisticsResponse {
+ double average = 1;
+ double min = 2;
+ double max = 3;
+ double standard_deviation = 4;
+}
