@@ -1,4 +1,4 @@
-﻿namespace SmartHome.API.Settings
+﻿namespace SmartHome.Infra.Settings
 {
     public class MqttSettings
     {

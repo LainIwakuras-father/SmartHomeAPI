@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace SmartHome.API.Migrations
+namespace SmartHome.Infra.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration

@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SmartHome.Core\SmartHome.Core.csproj" />
+    <ProjectReference Include="..\SmartHome.Infra\SmartHome.Infra.csproj" />
   </ItemGroup>
 
 </Project>

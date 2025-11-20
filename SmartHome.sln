@@ -1,11 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36717.8 d17.14
+VisualStudioVersion = 17.14.36717.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartHome.API", "SmartHome.API\SmartHome.API.csproj", "{B567F3C5-0027-481E-A3FF-CAA7385D8E29}"
 	ProjectSection(ProjectDependencies) = postProject
 		{0F97D5DD-5A71-490F-B414-9BFD442E30BE} = {0F97D5DD-5A71-490F-B414-9BFD442E30BE}
+		{1CFB5DDC-A57F-40DB-97BA-31BAA3CF6527} = {1CFB5DDC-A57F-40DB-97BA-31BAA3CF6527}
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartHome.Core", "SmartHome.Core\SmartHome.Core.csproj", "{0F97D5DD-5A71-490F-B414-9BFD442E30BE}"
@@ -22,6 +23,11 @@ EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{81DDED9D-158B-E303-5F62-77A2896D2A5A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartHome.Grpc", "SmartHome.Grpc\SmartHome.Grpc.csproj", "{58D91983-64F1-4A9B-AA19-A69F2FEE66C8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartHome.Infra", "SmartHome.Infra\SmartHome.Infra.csproj", "{1CFB5DDC-A57F-40DB-97BA-31BAA3CF6527}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0F97D5DD-5A71-490F-B414-9BFD442E30BE} = {0F97D5DD-5A71-490F-B414-9BFD442E30BE}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -49,6 +55,10 @@ Global
 		{58D91983-64F1-4A9B-AA19-A69F2FEE66C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{58D91983-64F1-4A9B-AA19-A69F2FEE66C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{58D91983-64F1-4A9B-AA19-A69F2FEE66C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1CFB5DDC-A57F-40DB-97BA-31BAA3CF6527}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1CFB5DDC-A57F-40DB-97BA-31BAA3CF6527}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1CFB5DDC-A57F-40DB-97BA-31BAA3CF6527}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1CFB5DDC-A57F-40DB-97BA-31BAA3CF6527}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

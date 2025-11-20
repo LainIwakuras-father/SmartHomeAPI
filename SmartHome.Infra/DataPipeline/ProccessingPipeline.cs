@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using SmartHome.Core.Domain;
 using SmartHome.Core.Entities;
 using SmartHome.Core.Interfaces;
@@ -12,7 +13,7 @@ using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace SmartHome.API.DataPipeline
+namespace SmartHome.Infra.DataPipeline
 {
     public class ProcessingPipeline : IDataProcessingPipeline
     {
@@ -59,7 +60,7 @@ namespace SmartHome.API.DataPipeline
             {
                 try
                 {
-                    _logger.LogDebug("ПОЛУЧЕНО СООБЩЕНИЕ ДЛЯ ПАРСИНГА");
+                    Console.WriteLine("ПОЛУЧЕНО СООБЩЕНИЕ ДЛЯ ПАРСИНГА");
                     var message = JsonSerializer.Deserialize<SensorMessage>(jsonString);
                     if (message == null)
                     {
@@ -181,7 +182,7 @@ namespace SmartHome.API.DataPipeline
 
                     }
                 }
-                _logger.LogDebug($"ВАЛИДАЦИЯ: УСПЕХ - создано {processedData.Count}");
+                Console.WriteLine($"ВАЛИДАЦИЯ: УСПЕХ - создано {processedData.Count}");
                 return processedData;
             }, new ExecutionDataflowBlockOptions
             {
@@ -199,7 +200,7 @@ namespace SmartHome.API.DataPipeline
             // Финальный блок для записи в базу
             _databaseWriterBlock = new ActionBlock<ProcessedData[]>(async batch =>
             {
-                _logger.LogDebug($"Processed batch of {batch.Length} messages: {batch}");
+                _logger.LogInformation($"Processed batch of {batch.Length} messages: {batch}");
                 await WriteBatchToDatabase(batch.Where(x => x != null).ToArray());
 
             }, new ExecutionDataflowBlockOptions
@@ -248,7 +249,7 @@ namespace SmartHome.API.DataPipeline
                 var repository = scope.ServiceProvider.GetRequiredService<ISensorTelemetryRepository>();
 
                 await repository.BatchInsertAsync(telemetrydata);
-                _logger.LogDebug("Data processed successfully");
+                Console.WriteLine("Data processed successfully");
             }
             catch (Exception ex)
             {
@@ -259,7 +260,7 @@ namespace SmartHome.API.DataPipeline
 
         public async Task ProcessDataAsync(string data)
         {
-            _logger.LogDebug("ИДЕТ в конвейер");
+            Console.WriteLine("ИДЕТ в конвейер");
             await _inputBuffer.SendAsync(data);
         }
 

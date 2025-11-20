@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Prometheus;
 using SmartHome.API;
-using SmartHome.API.Data;
-using SmartHome.API.DataPipeline;
-using SmartHome.API.MessageBroker;
-using SmartHome.API.Repositories;
-using SmartHome.API.Settings;
+using SmartHome.Infra.Data;
+using SmartHome.Infra.DataPipeline;
+using SmartHome.Infra.MessageBroker;
+using SmartHome.Infra.Repositories;
+using SmartHome.Infra.Settings;
 using SmartHome.Core.Interfaces;
 
 

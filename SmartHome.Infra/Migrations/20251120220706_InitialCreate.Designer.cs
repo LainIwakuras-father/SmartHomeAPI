@@ -5,14 +5,14 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using SmartHome.API.Data;
+using SmartHome.Infra.Data;
 
 #nullable disable
 
-namespace SmartHome.API.Migrations
+namespace SmartHome.Infra.Migrations
 {
     [DbContext(typeof(IndustrialDbContext))]
-    [Migration("20251120000106_InitialCreate")]
+    [Migration("20251120220706_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

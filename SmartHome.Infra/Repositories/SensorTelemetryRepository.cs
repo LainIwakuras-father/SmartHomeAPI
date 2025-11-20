@@ -1,9 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SmartHome.API.Data;
 using SmartHome.Core.Entities;
 using SmartHome.Core.Interfaces;
+using SmartHome.Infra.Data;
 
-namespace SmartHome.API.Repositories
+namespace SmartHome.Infra.Repositories
 {
     public class SensorTelemetryRepository(IndustrialDbContext context) : ISensorTelemetryRepository, IDisposable
     {

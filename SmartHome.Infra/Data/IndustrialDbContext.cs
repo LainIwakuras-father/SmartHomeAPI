@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SmartHome.Core.Entities;
 
-namespace SmartHome.API.Data
+namespace SmartHome.Infra.Data
 {
     public class IndustrialDbContext : DbContext
     {

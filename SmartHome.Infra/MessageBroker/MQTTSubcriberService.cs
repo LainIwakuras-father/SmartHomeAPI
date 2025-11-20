@@ -3,12 +3,13 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MQTTnet;
 using MQTTnet.Formatter;
-using SmartHome.API.Settings;
 using SmartHome.Core.Interfaces;
 using System.Text;
 using System.Threading.Tasks;
+using SmartHome.Infra.Settings;
+using Microsoft.Extensions.Hosting;
 
-namespace SmartHome.API.MessageBroker
+namespace SmartHome.Infra.MessageBroker
 {
     // в этот клиент нужно внедрить перемещения сообщения в TPL конвейер
     public class MQTTSubcriberService : BackgroundService

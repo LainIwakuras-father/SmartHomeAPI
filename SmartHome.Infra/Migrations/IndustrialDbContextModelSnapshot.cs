@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using SmartHome.API.Data;
+using SmartHome.Infra.Data;
 
 #nullable disable
 
-namespace SmartHome.API.Migrations
+namespace SmartHome.Infra.Migrations
 {
     [DbContext(typeof(IndustrialDbContext))]
     partial class IndustrialDbContextModelSnapshot : ModelSnapshot
