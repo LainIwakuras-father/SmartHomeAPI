@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+п»їusing Microsoft.EntityFrameworkCore;
 using Prometheus;
 using SmartHome.API;
 using SmartHome.Infra.Data;
@@ -7,13 +7,17 @@ using SmartHome.Infra.MessageBroker;
 using SmartHome.Infra.Repositories;
 using SmartHome.Infra.Settings;
 using SmartHome.Core.Interfaces;
+using SmartHome.API.Controllers;
 
 
 
 Console.WriteLine("Starting..");
 var builder = WebApplication.CreateBuilder(args);
 
-// Настройка метрик Prometheus
+
+builder.Services.AddControllers();
+
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ Prometheus
 builder.Services.AddMetricServer(options =>
 {
     options.Port = 9091;
@@ -22,7 +26,7 @@ builder.Services.AddMetricServer(options =>
 
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 builder.Services.Configure<MqttSettings>(builder.Configuration.GetSection("MqttSettings"));
-// Настройка Entity Framework Core
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Entity Framework Core
 builder.Services.AddDbContext<IndustrialDbContext>(options =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("IndustrialDatabase"),
@@ -35,7 +39,7 @@ builder.Services.AddDbContext<IndustrialDbContext>(options =>
                     errorCodesToAdd: null);
             npgsqlOptions.CommandTimeout(300);
         });
-    // Только для разработки
+    // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     if (builder.Environment.IsDevelopment())
     {
         options.EnableSensitiveDataLogging();
@@ -46,15 +50,15 @@ builder.Services.AddDbContext<IndustrialDbContext>(options =>
 //{
 //    options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
 //});
-//Регистрация Репозитория работающий с БД как Scoped так как DbContex тоже scoped важно В Singleton не может быть Scoped
+//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅ пїЅпїЅпїЅ Scoped пїЅпїЅпїЅ пїЅпїЅпїЅ DbContex пїЅпїЅпїЅпїЅ scoped пїЅпїЅпїЅпїЅпїЅ пїЅ Singleton пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ Scoped
 builder.Services.AddScoped<ISensorTelemetryRepository, SensorTelemetryRepository>();
-// Регистрируем DI ProcessingPipeline
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ DI ProcessingPipeline
 builder.Services.AddSingleton<IDataProcessingPipeline, ProcessingPipeline>();
 //builder.Services.AddSingleton<MQTTSubcriber>();
-//Регистрируем Фоновый Сервис Клиента Брокера MQTT
+//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ MQTT
 builder.Services.AddHostedService<MQTTSubcriberService>();
-//Регистрация Npgsql для работы с БД
-// Логирование
+//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Npgsql пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅ
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 builder.Services.AddLogging(loggingBuilder =>
 {
     loggingBuilder.AddConsole();
@@ -62,9 +66,17 @@ builder.Services.AddLogging(loggingBuilder =>
     loggingBuilder.AddConfiguration(builder.Configuration.GetSection("Logging"));
 });
 
-var app = builder.Build();
+builder.Services.AddEndpointsApiExplorer();
 
-// Включение сбора метрик HTTP запросов
+builder.Services.AddSwaggerGen();
+
+var app = builder.Build();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ HTTP пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 app.UseHttpMetrics(options =>
 {
     options.AddCustomLabel("host", context => context.Request.Host.Host);
@@ -72,13 +84,13 @@ app.UseHttpMetrics(options =>
     options.RequestCount.Enabled = true;
     options.RequestDuration.Enabled = true;
 });
-// Endpoint для метрик Prometheus
+// Endpoint пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ Prometheus
 app.MapMetrics("/metrics");
 
 
-// Запускаем MQTT подключение при старте приложения как фоновый сервис который передает все в Обработчик данных
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ MQTT пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 //var mqttSubcriber = app.Services.GetRequiredService<MQTTSubcriber>();
-// Запускаем проверку подключений при старте приложения
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 try
 {
     Console.WriteLine("Testing database and Redis connections...");
@@ -96,6 +108,10 @@ catch (Exception ex)
 // Configure the HTTP request pipeline.
 //app.MapGrpcService<GreeterService>();
 //app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
+// вњ… Р’РђР–РќРћ: Р”РѕР±Р°РІСЊС‚Рµ РїСЂР°РІРёР»СЊРЅС‹Р№ РїРѕСЂСЏРґРѕРє middleware
+app.UseRouting();
+app.UseAuthorization();
+app.MapControllers();
 
 await app.RunAsync();
 

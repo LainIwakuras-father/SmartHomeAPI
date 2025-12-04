@@ -31,11 +31,31 @@ namespace SmartHome.Infra.Repositories
                 }
                 _disposed = true;
             }
+        } 
+        
+        public async Task<IEnumerable<SensorTelemetry>> GetHistoryTelemetry(string? sensorId, DateTime from, DateTime to)
+        {
+            //// Автоматически исправляем если даты перепутаны
+            //if (from > to)
+            //{
+            //    (from, to) = (to, from); // Меняем местами
+            //}
+            var query = context.SensorTelemetry
+                .Where(t => t.Time >= from && t.Time <= to);
+            if (!string.IsNullOrEmpty(sensorId))
+            {
+                query = query.Where(t => t.SensorId == sensorId);
+            }
+            return await query
+                .OrderByDescending(t => t.Time)
+                .ToListAsync();
         }
+
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
-        }
+        } 
+       
     }
 }

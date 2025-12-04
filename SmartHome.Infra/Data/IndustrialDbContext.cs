@@ -6,7 +6,7 @@ namespace SmartHome.Infra.Data
     public class IndustrialDbContext : DbContext
     {
         public DbSet<SensorTelemetry> SensorTelemetry { get; set; }
-        //public DbSet<Sensor> Sensors { get; set; }
+        public DbSet<Sensor> Sensors { get; set; }
 
         public IndustrialDbContext() { }
         public IndustrialDbContext(DbContextOptions<IndustrialDbContext> options) : base(options) { }
@@ -16,7 +16,8 @@ namespace SmartHome.Infra.Data
         {
             modelBuilder.Entity<SensorTelemetry>(entity =>
             {
-                entity.HasKey(e => e.Id);
+                // СОСТАВНОЙ ПЕРВИЧНЫЙ КЛЮЧ (Id + Time)
+                entity.HasKey(e => new { e.Id, e.Time });
                 entity.HasIndex(e => e.Time);
                 entity.HasIndex(e => e.SensorId);
                 entity.HasIndex(e => new { e.SensorId, e.Time });
@@ -27,11 +28,11 @@ namespace SmartHome.Infra.Data
                 v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
             });
 
-            //modelBuilder.Entity<Sensor>(entity =>
-            //{
-            //    entity.HasKey(e => e.Id);
-            //    entity.HasIndex(e => e.SensorId).IsUnique();
-            //});
+            modelBuilder.Entity<Sensor>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.SensorId).IsUnique();
+            });
         }
 
     }

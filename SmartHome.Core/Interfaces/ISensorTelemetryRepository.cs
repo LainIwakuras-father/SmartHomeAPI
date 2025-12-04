@@ -11,6 +11,6 @@ namespace SmartHome.Core.Interfaces
     public interface ISensorTelemetryRepository
     {
         Task BatchInsertAsync(IEnumerable<SensorTelemetry> batch);
-
+        Task<IEnumerable<SensorTelemetry>> GetHistoryTelemetry(string? sensorId, DateTime from, DateTime to);
     }
 }
