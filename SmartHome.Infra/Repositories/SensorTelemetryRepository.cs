@@ -51,11 +51,38 @@ namespace SmartHome.Infra.Repositories
                 .ToListAsync();
         }
 
+        //public async Task<IEnumerable<Sensor>> GetSensors()
+        //{
+           
+        //}
+
+        //Вариант получения потока данных из БД а не напрямую
+
+
+
+
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
-        } 
-       
+        }
+
+        public async Task<bool> SensorExists(string sensorId)
+        {
+            return await context.Sensors
+                .AnyAsync(s => s.SensorId == sensorId);
+        }
+
+        public async Task<IEnumerable<SensorTelemetry>> GetDataSinceAsync(string sensorId, DateTime sinceTime)
+        {
+            
+            return await context.SensorTelemetry
+             .Where(x => x.SensorId == sensorId && x.Time > sinceTime)
+             .OrderBy(x => x.Time)
+             .Take(100)
+             .AsNoTracking()
+             .ToListAsync();
+
+        }
     }
 }

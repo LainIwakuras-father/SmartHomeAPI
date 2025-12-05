@@ -244,12 +244,30 @@ namespace SmartHome.Infra.DataPipeline
                         Value = data.Value.Value
 
                     }).ToList();
+
+                // Извлечение уникальных датчиков
+                var uniqueSensors = batch
+                    .Where(x => !string.IsNullOrEmpty(x.SensorId))
+                    .GroupBy(x => x.SensorId)
+                    .Select(g => new Sensor
+                    {
+                       SensorId = g.Key,
+                    })
+                    .ToList();
+
+
+
+
                 // Создаем новый scope для этой операции
                 using var scope = _serviceScopeFactory.CreateScope();
                 var repository = scope.ServiceProvider.GetRequiredService<ISensorTelemetryRepository>();
+                var sensorrepository = scope.ServiceProvider.GetRequiredService<ISensorsRepository>();
 
                 await repository.BatchInsertAsync(telemetrydata);
-                Console.WriteLine("Data processed successfully");
+                await sensorrepository.BatchInsertAsync(uniqueSensors);
+                _logger.LogInformation(
+                 $"Записано {telemetrydata.Count} телеметрий, " +
+                 $"обновлено {uniqueSensors.Count} датчиков");
             }
             catch (Exception ex)
             {

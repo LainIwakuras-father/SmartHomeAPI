@@ -51,6 +51,7 @@ builder.Services.AddDbContext<IndustrialDbContext>(options =>
 //    options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
 //});
 //����������� ����������� ���������� � �� ��� Scoped ��� ��� DbContex ���� scoped ����� � Singleton �� ����� ���� Scoped
+builder.Services.AddScoped<ISensorsRepository, SensorsRepository>();
 builder.Services.AddScoped<ISensorTelemetryRepository, SensorTelemetryRepository>();
 // ������������ DI ProcessingPipeline
 builder.Services.AddSingleton<IDataProcessingPipeline, ProcessingPipeline>();

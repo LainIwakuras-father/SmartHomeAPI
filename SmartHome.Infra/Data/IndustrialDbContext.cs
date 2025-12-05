@@ -16,11 +16,18 @@ namespace SmartHome.Infra.Data
         {
             modelBuilder.Entity<SensorTelemetry>(entity =>
             {
-                // СОСТАВНОЙ ПЕРВИЧНЫЙ КЛЮЧ (Id + Time)
+                
+                // 1. СОСТАВНОЙ ПЕРВИЧНЫЙ КЛЮЧ (Id + Time)
                 entity.HasKey(e => new { e.Id, e.Time });
-                entity.HasIndex(e => e.Time);
-                entity.HasIndex(e => e.SensorId);
-                entity.HasIndex(e => new { e.SensorId, e.Time });
+                // 2. Автоинкремент только для Id
+                entity.Property(e => e.Id)
+                      .ValueGeneratedOnAdd(); // EF будет генерировать Id
+                entity.HasIndex(e => e.Time)
+                 .HasDatabaseName("ix_sensortelemetry_time");
+                entity.HasIndex(e => e.SensorId)
+                .HasDatabaseName("ix_sensortelemetry_sensorid");
+                entity.HasIndex(e => new { e.SensorId, e.Time })
+                .HasDatabaseName("ix_sensortelemetry_sensorid_time");
 
                 entity.Property(e => e.Time)
                 .HasConversion(
