@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SmartHome.Infra.Data;
@@ -11,9 +12,11 @@ using SmartHome.Infra.Data;
 namespace SmartHome.Infra.Migrations
 {
     [DbContext(typeof(IndustrialDbContext))]
-    partial class IndustrialDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251129110919_AddSensorsTable")]
+    partial class AddSensorsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -50,26 +53,23 @@ namespace SmartHome.Infra.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("Time")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("SensorId")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<DateTime>("Time")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<double>("Value")
                         .HasColumnType("double precision");
 
-                    b.HasKey("Id", "Time");
+                    b.HasKey("Id");
 
-                    b.HasIndex("SensorId")
-                        .HasDatabaseName("ix_sensortelemetry_sensorid");
+                    b.HasIndex("SensorId");
 
-                    b.HasIndex("Time")
-                        .HasDatabaseName("ix_sensortelemetry_time");
+                    b.HasIndex("Time");
 
-                    b.HasIndex("SensorId", "Time")
-                        .HasDatabaseName("ix_sensortelemetry_sensorid_time");
+                    b.HasIndex("SensorId", "Time");
 
                     b.ToTable("SensorTelemetry");
                 });

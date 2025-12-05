@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using SmartHome.Infra.Data;
@@ -11,9 +12,11 @@ using SmartHome.Infra.Data;
 namespace SmartHome.Infra.Migrations
 {
     [DbContext(typeof(IndustrialDbContext))]
-    partial class IndustrialDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251204140827_Recreater")]
+    partial class Recreater
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -44,14 +47,11 @@ namespace SmartHome.Infra.Migrations
 
             modelBuilder.Entity("SmartHome.Core.Entities.SensorTelemetry", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
                     b.Property<DateTime>("Time")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("integer");
 
                     b.Property<string>("SensorId")
                         .IsRequired()
@@ -60,7 +60,7 @@ namespace SmartHome.Infra.Migrations
                     b.Property<double>("Value")
                         .HasColumnType("double precision");
 
-                    b.HasKey("Id", "Time");
+                    b.HasKey("Time");
 
                     b.HasIndex("SensorId")
                         .HasDatabaseName("ix_sensortelemetry_sensorid");

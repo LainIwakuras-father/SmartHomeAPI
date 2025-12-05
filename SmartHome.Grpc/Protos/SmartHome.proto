@@ -3,11 +3,11 @@ syntax = "proto3";
 
 option csharp_namespace = "SmartHome.Grpc";
 
-package industrial;
+//package industrial;
 
 import "google/protobuf/timestamp.proto";
 
-Service IndustrialDataService {
+service IndustrialDataService {
  rpc StreamSensorData (stream SensorDataRequest) returns (stream SensorDataResponse);
  rpc GetHistoricalData (HistoricalDataRequest) returns (HistoricalDataResponse);
  rpc GetSystemStatistics (StatisticsRequest) returns (StatisticsResponse);

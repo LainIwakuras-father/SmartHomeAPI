@@ -1,11 +1,11 @@
 @SmartHome.API_HostAddress = http://localhost:5033
 
-GET {{SmartHome.API_HostAddress}}/todos/
+GET {{SmartHome.API_HostAddress}}
 Accept: application/json
 
 ###
 
-GET {{SmartHome.API_HostAddress}}/todos/1
+GET {{SmartHome.API_HostAddress}}
 Accept: application/json
 
 ###

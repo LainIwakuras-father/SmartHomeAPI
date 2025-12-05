@@ -1,4 +1,6 @@
-﻿using System;
+﻿using BenchmarkDotNet.Attributes;
+using SmartHome.Infra.DataPipeline;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,13 +9,13 @@ using System.Threading.Tasks;
 [MemoryDiagnoser]
 public class PipelineBenchmark
 {
-    private DataProcessingPipeline _pipeline;
+    private ProcessingPipeline _pipeline;
     private List<SensorData> _testData;
 
     [GlobalSetup]
     public void Setup()
     {
-        _pipeline = new DataProcessingPipeline();
+        _pipeline = new ProcessingPipeline();
         _testData = GenerateTestData(10000);
     }
 
