@@ -5,21 +5,21 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
-	<ItemGroup>
-		<Protobuf Include="Protos\SmartHome.proto" GrpcServices="Server" />
-	</ItemGroup>
+
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.25.3" />
-    <PackageReference Include="Grpc.AspNetCore" Version="2.62.0" />
-    <PackageReference Include="Grpc.AspNetCore.Server.Reflection" Version="2.62.0" />
-    <PackageReference Include="Grpc.Tools" Version="2.62.0">
+    <Protobuf Include="Protos\greet.proto" GrpcServices="Server" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Grpc.AspNetCore" Version="2.57.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.57.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Protos\" />
+    <ProjectReference Include="..\SmartHome.Infra\SmartHome.Infra.csproj" />
   </ItemGroup>
 
 </Project>
