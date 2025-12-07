@@ -19,7 +19,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-// ��������� ������ Prometheus
+
 builder.Services.AddMetricServer(options =>
 {
     options.Port = 9091;
@@ -28,7 +28,6 @@ builder.Services.AddMetricServer(options =>
 
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 builder.Services.Configure<MqttSettings>(builder.Configuration.GetSection("MqttSettings"));
-// ��������� Entity Framework Core
 builder.Services.AddDbContext<IndustrialDbContext>(options =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("IndustrialDatabase"),
@@ -41,18 +40,14 @@ builder.Services.AddDbContext<IndustrialDbContext>(options =>
                     errorCodesToAdd: null);
             npgsqlOptions.CommandTimeout(300);
         });
-    // ������ ��� ����������
+
     if (builder.Environment.IsDevelopment())
     {
         options.EnableSensitiveDataLogging();
         options.EnableDetailedErrors();
     }
 });
-//builder.Services.ConfigureHttpJsonOptions(options =>
-//{
-//    options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
-//});
-//����������� ����������� ���������� � �� ��� Scoped ��� ��� DbContex ���� scoped ����� � Singleton �� ����� ���� Scoped
+
 builder.Services.AddScoped<ISensorsRepository, SensorsRepository>();
 builder.Services.AddScoped<ISensorTelemetryRepository, SensorTelemetryRepository>();
 //добавляем кеш
@@ -63,18 +58,9 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.InstanceName = "SmartHome_"; // опционально, префикс для ключей
 });
 builder.Services.AddSingleton<ICache, RedisCache>();
-////Регистрируем Redis ConnectionMultiplexer
-//builder.Services.AddSingleton<IConnectionMultiplexer>(sp => 
-//{
-//    ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("Redis"));
-//});
-// ������������ DI ProcessingPipeline
 builder.Services.AddSingleton<IDataProcessingPipeline, ProcessingPipeline>();
-//builder.Services.AddSingleton<MQTTSubcriber>();
-//������������ ������� ������ ������� ������� MQTT
 builder.Services.AddHostedService<MQTTSubcriberService>();
-//����������� Npgsql ��� ������ � ��
-// �����������
+
 builder.Services.AddLogging(loggingBuilder =>
 {
     loggingBuilder.AddConsole();
@@ -92,7 +78,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-// ��������� ����� ������ HTTP ��������
+
 app.UseHttpMetrics(options =>
 {
     options.AddCustomLabel("host", context => context.Request.Host.Host);
@@ -100,13 +86,10 @@ app.UseHttpMetrics(options =>
     options.RequestCount.Enabled = true;
     options.RequestDuration.Enabled = true;
 });
-// Endpoint ��� ������ Prometheus
 app.MapMetrics("/metrics");
 
 
-// ��������� MQTT ����������� ��� ������ ���������� ��� ������� ������ ������� �������� ��� � ���������� ������
-//var mqttSubcriber = app.Services.GetRequiredService<MQTTSubcriber>();
-// ��������� �������� ����������� ��� ������ ����������
+
 try
 {
     Console.WriteLine("Testing database and Redis connections...");

@@ -35,11 +35,7 @@ namespace SmartHome.Infra.Repositories
         
         public async Task<IEnumerable<SensorTelemetry>> GetHistoryTelemetry(string? sensorId, DateTime from, DateTime to)
         {
-            //// Автоматически исправляем если даты перепутаны
-            //if (from > to)
-            //{
-            //    (from, to) = (to, from); // Меняем местами
-            //}
+            
             var query = context.SensorTelemetry
                 .Where(t => t.Time >= from && t.Time <= to);
             if (!string.IsNullOrEmpty(sensorId))
@@ -51,12 +47,7 @@ namespace SmartHome.Infra.Repositories
                 .ToListAsync();
         }
 
-        //public async Task<IEnumerable<Sensor>> GetSensors()
-        //{
-           
-        //}
-
-        //Вариант получения потока данных из БД а не напрямую
+        
 
 
 

@@ -21,8 +21,7 @@ namespace SmartHome.Infra.DataPipeline
 
         private TransformBlock<string, SensorMessage> _parsingBlock;
         private TransformManyBlock<SensorMessage, ProcessedData> _validationBlock;
-        //private TransformBlock<PayloadData, PayloadData> _enrichmentBlock;
-
+        
         private BatchBlock<ProcessedData> _batchingBlock;
         private ActionBlock<ProcessedData[]> _databaseWriterBlock;
 
