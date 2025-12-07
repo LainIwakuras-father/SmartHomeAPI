@@ -84,5 +84,16 @@ namespace SmartHome.Infra.Repositories
              .ToListAsync();
 
         }
+        // Новая оптимизированная реализация: возвращает последнее значение для заданного датчика
+        public async Task<SensorTelemetry?> GetLatestSensorData(string sensorId)
+        {
+            if (string.IsNullOrEmpty(sensorId)) return null;
+
+            return await context.SensorTelemetry
+                .Where(t => t.SensorId == sensorId)
+                .OrderByDescending(t => t.Time)
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+        }
     }
 }

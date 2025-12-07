@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.ObjectPool;
 using SmartHome.Core.Domain;
@@ -8,18 +9,15 @@ using SmartHome.Core.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace SmartHome.Infra.DataPipeline
 {
     public class ProcessingPipeline : IDataProcessingPipeline
     {
-        private BufferBlock<string> _inputBuffer;// Работаем с байтами вместо строк
+        private BufferBlock<string> _inputBuffer; // Работаем с байтами вместо строк
 
         private TransformBlock<string, SensorMessage> _parsingBlock;
         private TransformManyBlock<SensorMessage, ProcessedData> _validationBlock;
@@ -31,17 +29,17 @@ namespace SmartHome.Infra.DataPipeline
         // базовые настройки 
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILogger<ProcessingPipeline> _logger;
-        private readonly ICache _cache;
+        private readonly ICache _cache; // теперь используем ICache
 
-        //// Пул для ProcessedData объектов (Object Pool pattern)
-        //private static readonly ObjectPool<ProcessedData> _processedDataPool =
-        //    new DefaultObjectPool<ProcessedData>(new ProcessedDataPooledPolicy(), 1000);
+        // Пул для ProcessedData объектов (Object Pool pattern)
+        private static readonly ObjectPool<ProcessedData> _processedDataPool =
+            new DefaultObjectPool<ProcessedData>(new ProcessedDataPooledPolicy(), 1000);
+
         public ProcessingPipeline(
             ILogger<ProcessingPipeline> logger,
             IServiceScopeFactory serviceScopeFactory,
             ICache cache = null
             )
-        //ISensorTelemetryRepository repository IServiceScopeFactory это с внешней библиотеки
         {
             _logger = logger;
             _serviceScopeFactory = serviceScopeFactory;
@@ -50,6 +48,7 @@ namespace SmartHome.Infra.DataPipeline
             CreatePipelineBlocks();
             LinkPipelineBlocks();
         }
+
         private void CreatePipelineBlocks()
         {
             // Буфер для входящих данных
@@ -57,8 +56,8 @@ namespace SmartHome.Infra.DataPipeline
             {
                 BoundedCapacity = 10000,
             });
-            //сообщения приходят в формате JSON нужно их распарсить
-            //Блок Парсинга JSON
+
+            // Блок Парсинга JSON
             _parsingBlock = new TransformBlock<string, SensorMessage>(jsonString =>
             {
                 try
@@ -73,19 +72,16 @@ namespace SmartHome.Infra.DataPipeline
                 }
                 catch (Exception ex)
                 {
-                        _logger.LogError($"ПАРСИНГ: НЕИЗВЕСТНАЯ ОШИБКА - {ex.Message}");
-                    // _logger.LogWarning(ex, "JSON parsing failed");
+                    _logger.LogError($"ПАРСИНГ: НЕИЗВЕСТНАЯ ОШИБКА - {ex.Message}");
                     return null;
                 }
             }, new ExecutionDataflowBlockOptions
             {
-               MaxDegreeOfParallelism = 8,// _settings.MaxDegreeOfParallelism
-               BoundedCapacity = 1000
-            }
-            );
+                MaxDegreeOfParallelism = 8,
+                BoundedCapacity = 1000
+            });
 
-
-            // Блок валидации (параллельная обработка) из 1 JSON несколько объектов ProcessedData 
+            // Блок валидации
             _validationBlock = new TransformManyBlock<SensorMessage, ProcessedData>(sensorMessage =>
             {
                 if (sensorMessage?.Messages == null || sensorMessage.Messages.Count == 0)
@@ -94,85 +90,22 @@ namespace SmartHome.Infra.DataPipeline
                     return Enumerable.Empty<ProcessedData>();
                 }
 
-                var processedData = new List<ProcessedData>(7);// Предварительное выделение
+                var processedData = new List<ProcessedData>(7);
 
                 foreach (var message in sensorMessage.Messages)
                 {
                     if (message.Payload != null)
                     {
-                        
                         var payload = message.Payload;
-
-                        //if (payload.Humanidity.HasValue)
-                        //{
-                        //    processedData.Add(new ProcessedData
-                        //    {
-                        //        SensorId = "Humanidity",
-                        //        Timestamp = message.Timestamp,
-                        //        Value = payload.Humanidity.Value
-                        //    });
-                        //}
-
-                        //if (payload.Temperature.HasValue)
-                        //{
-                        //    processedData.Add(new ProcessedData
-                        //    {
-                        //        SensorId = "Temperature",
-                        //        Timestamp = message.Timestamp,
-                        //        Value = payload.Temperature.Value
-                        //    });
-                        //}
-
-                        //if (payload.Pressure.HasValue)
-                        //{
-                        //    processedData.Add(new ProcessedData
-                        //    {
-                        //        SensorId = "Pressure",
-                        //        Timestamp = message.Timestamp,
-                        //        Value = payload.Pressure.Value
-                        //    });
-                        //}
-
-                        //// Добавьте остальные датчики по аналогии...
-                        //if (payload.Motion.HasValue)
-                        //{
-                        //    processedData.Add(new ProcessedData
-                        //    {
-                        //        SensorId = "Motion",
-                        //        Timestamp = message.Timestamp,
-                        //        Value = payload.Motion.Value
-                        //    });
-                        //}
-                        //if (payload.Light.HasValue)
-                        //{
-                        //    processedData.Add(new ProcessedData
-                        //    {
-                        //        SensorId = "Light",
-                        //        Timestamp = message.Timestamp,
-                        //        Value = payload.Light.Value
-                        //    });
-                        //}
-                        //if (payload.Smokedetector.HasValue)
-                        //{
-                        //    processedData.Add(new ProcessedData
-                        //    {
-                        //        SensorId = "Smokedetektor",
-                        //        Timestamp = message.Timestamp,
-                        //        Value = payload.Smokedetector.Value
-                        //    });
-                        //}
                         AddIfHasValue(processedData, "Humanidity", message.Timestamp, payload.Humanidity);
                         AddIfHasValue(processedData, "Temperature", message.Timestamp, payload.Temperature);
                         AddIfHasValue(processedData, "Pressure", message.Timestamp, payload.Pressure);
                         AddIfHasValue(processedData, "Motion", message.Timestamp, payload.Motion);
                         AddIfHasValue(processedData, "Light", message.Timestamp, payload.Light);
                         AddIfHasValue(processedData, "Smokedetektor", message.Timestamp, payload.Smokedetector);
-
-
-
                     }
                 }
-                Console.WriteLine($"ВАЛИДАЦИЯ: УСПЕХ - создано {processedData.Count}");
+                _logger.LogDebug($"ВАЛИДАЦИЯ: УСПЕХ - создано {processedData.Count}");
                 return processedData;
             }, new ExecutionDataflowBlockOptions
             {
@@ -180,25 +113,17 @@ namespace SmartHome.Infra.DataPipeline
                 BoundedCapacity = 1000
             });
 
-            // Блок обогащения данных
-            //_enrichmentBlock = new TransformBlock<PayloadData, PayloadData>(data =>
-           
-
-            // Блок пакетной обработки(группируем по 100 сообщений)
+            // Блок пакетной обработки (группируем по 100 сообщений)
             _batchingBlock = new BatchBlock<ProcessedData>(100);
 
             // Финальный блок для записи в базу
             _databaseWriterBlock = new ActionBlock<ProcessedData[]>(async batch =>
             {
-                _logger.LogInformation($"Processed batch of {batch.Length} messages: {batch}");
                 await WriteBatchToDatabase(batch.Where(x => x != null).ToArray());
-
             }, new ExecutionDataflowBlockOptions
             {
-                MaxDegreeOfParallelism = 4// hm
+                MaxDegreeOfParallelism = 4
             });
-
-
         }
 
         // Соединяем блоки
@@ -216,48 +141,39 @@ namespace SmartHome.Infra.DataPipeline
 
         private async Task WriteBatchToDatabase(ProcessedData[] batch)
         {
-            //// Здесь будет логика сохранения в базу данных, кэш и т.д.
-            //// Пока просто логируем
-            //Console.WriteLine("ОТПРАВИЛ В БАЗУ ХУЯЗУ");
-
-            //// Имитация обработки
-            //await Task.Delay(10);
             try
             {
-                //преобразовываем данные в нужный вид
                 var telemetrydata = batch
-                    .Where(x => x.Value.HasValue).
-                    Select(data => new SensorTelemetry
+                    .Where(x => x.Value.HasValue)
+                    .Select(data => new SensorTelemetry
                     {
                         SensorId = data.SensorId,
                         Time = data.Timestamp,
                         Value = data.Value.Value
+                    });
 
-                    }).ToList();
-
-                // Извлечение уникальных датчиков
                 var uniqueSensors = batch
                     .Where(x => !string.IsNullOrEmpty(x.SensorId))
                     .GroupBy(x => x.SensorId)
                     .Select(g => new Sensor
                     {
-                       SensorId = g.Key,
+                        SensorId = g.Key,
                     })
                     .ToList();
 
-
-
-
-                // Создаем новый scope для этой операции
                 using var scope = _serviceScopeFactory.CreateScope();
                 var repository = scope.ServiceProvider.GetRequiredService<ISensorTelemetryRepository>();
                 var sensorrepository = scope.ServiceProvider.GetRequiredService<ISensorsRepository>();
 
-                await repository.BatchInsertAsync(telemetrydata);
+                await repository.BatchInsertAsync(telemetrydata.ToList());
                 await sensorrepository.BatchInsertAsync(uniqueSensors);
+
+                // Используем ICache через адаптер ICache.UpdateCache (не блокируем запись в БД)
+                await UpdateCacheUsingICacheAsync(telemetrydata.ToArray());
+
                 _logger.LogInformation(
-                 $"Записано {telemetrydata.Count} телеметрий, " +
-                 $"обновлено {uniqueSensors.Count} датчиков");
+                    $"Записано {telemetrydata.ToArray().Length} телеметрий, " +
+                    $"обновлено {uniqueSensors.Count} датчиков");
             }
             catch (Exception ex)
             {
@@ -265,29 +181,56 @@ namespace SmartHome.Infra.DataPipeline
                 throw;
             }
         }
+
+        // Обёртка для интеграции с ICache.
+        // ICache.UpdateCache — синхронный метод в интерфейсе, поэтому вызываем его быстро и безопасно.
+        private Task UpdateCacheUsingICacheAsync(SensorTelemetry[] telemetryData)
+        {
+            if (_cache == null || telemetryData == null || telemetryData.Length == 0)
+            {
+                return Task.CompletedTask;
+            }
+
+            try
+            {
+                foreach (var data in telemetryData)
+                {
+                    try
+                    {
+                        _cache.UpdateCache(data);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Локально логируем проблему с конкретной записью и продолжаем
+                        _logger.LogWarning(ex, "ICache.UpdateCache failed for sensor {SensorId}", data.SensorId);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Cache update via ICache failed but continuing");
+            }
+
+            return Task.CompletedTask;
+        }
+
         // Метод для добавления данных с использованием пула объектов
         private void AddIfHasValue(List<ProcessedData> list, string sensorId,
                                    DateTime timestamp, double? value)
         {
             if (value.HasValue)
             {
-                // Берем объект из пула вместо создания нового
-                //var data = _processedDataPool.Get();
-                //data.SensorId = sensorId;
-                //data.Timestamp = timestamp;
-                //data.Value = value.Value;
-                var data = new ProcessedData
-                    {
-                     SensorId = sensorId,
-                     Timestamp = timestamp,
-                     Value = value.Value
-                    };
+                var data = _processedDataPool.Get();
+                data.SensorId = sensorId;
+                data.Timestamp = timestamp;
+                data.Value = value.Value;
                 list.Add(data);
             }
         }
+
         public async Task ProcessDataAsync(string data)
         {
-            Console.WriteLine("ИДЕТ в конвейер");
+            _logger.LogDebug("ИДЕТ в конвейер");
             await _inputBuffer.SendAsync(data);
         }
 
@@ -296,7 +239,6 @@ namespace SmartHome.Infra.DataPipeline
             _inputBuffer.Complete();
             await _databaseWriterBlock.Completion;
         }
-
     }
 }
 //Проверка: Напишите тест, который отправляет 10,000 сообщений в конвейер

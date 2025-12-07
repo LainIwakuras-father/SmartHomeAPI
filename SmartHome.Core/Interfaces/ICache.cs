@@ -1,8 +1,4 @@
 ﻿using SmartHome.Core.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SmartHome.Core.Interfaces
@@ -11,5 +7,8 @@ namespace SmartHome.Core.Interfaces
     {
         Task ProcessCacheUpdates();
         void UpdateCache(SensorTelemetry data);
+
+        // Новая функция чтения последнего значения из кеша
+        Task<SensorTelemetry?> GetLatestAsync(string sensorId);
     }
 }

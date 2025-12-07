@@ -8,7 +8,9 @@ using SmartHome.Infra.Repositories;
 using SmartHome.Infra.Settings;
 using SmartHome.Core.Interfaces;
 using SmartHome.API.Controllers;
-
+using StackExchange.Redis;
+using Microsoft.Extensions.Caching.Distributed;
+using SmartHome.Infra.Cache;
 
 
 Console.WriteLine("Starting..");
@@ -53,6 +55,19 @@ builder.Services.AddDbContext<IndustrialDbContext>(options =>
 //����������� ����������� ���������� � �� ��� Scoped ��� ��� DbContex ���� scoped ����� � Singleton �� ����� ���� Scoped
 builder.Services.AddScoped<ISensorsRepository, SensorsRepository>();
 builder.Services.AddScoped<ISensorTelemetryRepository, SensorTelemetryRepository>();
+//добавляем кеш
+// Добавление сервисов кэширования Redis
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+    options.InstanceName = "SmartHome_"; // опционально, префикс для ключей
+});
+builder.Services.AddSingleton<ICache, RedisCache>();
+////Регистрируем Redis ConnectionMultiplexer
+//builder.Services.AddSingleton<IConnectionMultiplexer>(sp => 
+//{
+//    ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("Redis"));
+//});
 // ������������ DI ProcessingPipeline
 builder.Services.AddSingleton<IDataProcessingPipeline, ProcessingPipeline>();
 //builder.Services.AddSingleton<MQTTSubcriber>();
@@ -115,6 +130,10 @@ app.UseAuthorization();
 app.MapControllers();
 
 await app.RunAsync();
+
+
+
+
 
 
 

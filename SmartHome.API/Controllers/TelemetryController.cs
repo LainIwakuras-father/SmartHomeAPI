@@ -23,18 +23,20 @@ namespace SmartHome.API.Controllers
 
         private readonly ILogger _logger;
         private readonly ISensorTelemetryRepository _repository;
-
+        private readonly ICache _cache;
         public TelemetryController(
             IndustrialDbContext context,
             ISensorTelemetryRepository repository,
             ILogger<TelemetryController>logger,
-             IServiceScopeFactory serviceScopeFactory)
+             IServiceScopeFactory serviceScopeFactory,
+             ICache cache)
         {
 
             _context = context;
             _repository = repository;
             _logger = logger;
             _serviceScopeFactory = serviceScopeFactory;
+            _cache = cache;
         }
 
         // GET: api/TelemetryController
@@ -62,6 +64,34 @@ namespace SmartHome.API.Controllers
                 return StatusCode(500, "Internal server error");
             }
            
+        }
+
+        // Новый endpoint: получить последнее значение (быстро из кеша, fallback в БД)
+        [HttpGet("{id}/latest")]
+        public async Task<ActionResult<SensorTelemetry>> GetLatest(string id)
+        {
+            try
+            {
+                var cached = await _cache.GetLatestAsync(id);
+                if (cached != null)
+                {
+                    _logger.LogDebug("извлечение из кеша для датчика {SensorId}", id);
+                    return Ok(cached);
+                }
+
+                // fallback на репозиторий: получим историю за весь период и возьмём первое (она возвращает в порядке убывания времени)
+                var latestFromDb = await _repository.GetLatestSensorData(id);
+                
+
+                if (latestFromDb == null) return NotFound();
+
+                return Ok(latestFromDb);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving latest telemetry for {SensorId}", id);
+                return StatusCode(500, "Internal server error");
+            }
         }
         [HttpGet("{id}/data")]
         public async Task GetSensorDataStream(string id)
