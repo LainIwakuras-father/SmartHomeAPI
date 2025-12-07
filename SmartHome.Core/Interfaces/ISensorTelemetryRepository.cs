@@ -18,6 +18,7 @@ namespace SmartHome.Core.Interfaces
         Task<bool> SensorExists(string sensorId);
         //Task<SensorTelemetry> GetLatestSensorData(string sensorId);
         Task<IEnumerable<SensorTelemetry>> GetDataSinceAsync(string sensorId, DateTime sinceTime);
-
+        // Новый оптимальный метод — возвращает последнее значение для датчика (nullable если нет записей)
+        Task<SensorTelemetry?> GetLatestSensorData(string sensorId);
     }
 }

@@ -35,11 +35,7 @@ namespace SmartHome.Infra.Repositories
         
         public async Task<IEnumerable<SensorTelemetry>> GetHistoryTelemetry(string? sensorId, DateTime from, DateTime to)
         {
-            //// Автоматически исправляем если даты перепутаны
-            //if (from > to)
-            //{
-            //    (from, to) = (to, from); // Меняем местами
-            //}
+            
             var query = context.SensorTelemetry
                 .Where(t => t.Time >= from && t.Time <= to);
             if (!string.IsNullOrEmpty(sensorId))
@@ -51,12 +47,7 @@ namespace SmartHome.Infra.Repositories
                 .ToListAsync();
         }
 
-        //public async Task<IEnumerable<Sensor>> GetSensors()
-        //{
-           
-        //}
-
-        //Вариант получения потока данных из БД а не напрямую
+        
 
 
 
@@ -83,6 +74,17 @@ namespace SmartHome.Infra.Repositories
              .AsNoTracking()
              .ToListAsync();
 
+        }
+        // Новая оптимизированная реализация: возвращает последнее значение для заданного датчика
+        public async Task<SensorTelemetry?> GetLatestSensorData(string sensorId)
+        {
+            if (string.IsNullOrEmpty(sensorId)) return null;
+
+            return await context.SensorTelemetry
+                .Where(t => t.SensorId == sensorId)
+                .OrderByDescending(t => t.Time)
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
         }
     }
 }
