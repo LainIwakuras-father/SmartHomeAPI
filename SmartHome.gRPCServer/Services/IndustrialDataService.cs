@@ -11,17 +11,17 @@ namespace SmartHome.gRPCServer.Services
     public class IndustrialDataService : IndustrialDataServiceBase
     {
         private readonly ILogger<IndustrialDataService> _logger;
-        private readonly ProcessingPipeline _pipeline;
-        private readonly RedisCache _cache;
+        //private readonly ProcessingPipeline _pipeline;
+        //private readonly RedisCache _cache;
 
         public IndustrialDataService(
-            ILogger<IndustrialDataService> logger,
-            ProcessingPipeline pipeline,
-            RedisCache cache)
+            ILogger<IndustrialDataService> logger)
+            //ProcessingPipeline pipeline,
+            //RedisCache cache)
         {
             _logger = logger;
-            _pipeline = pipeline;
-            _cache = cache;
+            //_pipeline = pipeline;
+            //_cache = cache;
         }
 
         public override async Task StreamSensorData(IAsyncStreamReader<SensorDataRequest> requestStream,

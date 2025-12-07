@@ -12,8 +12,8 @@ builder.Services.AddGrpc(options =>
     options.MaxReceiveMessageSize = 16 * 1024 * 1024; // 16MB
     options.MaxSendMessageSize = 16 * 1024 * 1024; // 16MB
 });
-builder.Services.AddSingleton<ProcessingPipeline>();
-builder.Services.AddSingleton<RedisCache>();
+//builder.Services.AddSingleton<ProcessingPipeline>();
+//builder.Services.AddSingleton<RedisCache>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
