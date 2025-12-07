@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.ObjectPool;
 using SmartHome.Core.Domain;
 using SmartHome.Core.Entities;
 using SmartHome.Core.Interfaces;
+using SmartHome.Core.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,35 +19,36 @@ namespace SmartHome.Infra.DataPipeline
 {
     public class ProcessingPipeline : IDataProcessingPipeline
     {
-        private BufferBlock<string> _inputBuffer;
-        private TransformBlock<string, SensorMessage> _parsingBlock;
+        private BufferBlock<string> _inputBuffer;// Работаем с байтами вместо строк
 
+        private TransformBlock<string, SensorMessage> _parsingBlock;
         private TransformManyBlock<SensorMessage, ProcessedData> _validationBlock;
         //private TransformBlock<PayloadData, PayloadData> _enrichmentBlock;
 
         private BatchBlock<ProcessedData> _batchingBlock;
         private ActionBlock<ProcessedData[]> _databaseWriterBlock;
 
-       
-
         // базовые настройки 
         private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILogger<ProcessingPipeline> _logger;
-        //private ISensorTelemetryRepository _repository;
+        private readonly ICache _cache;
 
+        //// Пул для ProcessedData объектов (Object Pool pattern)
+        //private static readonly ObjectPool<ProcessedData> _processedDataPool =
+        //    new DefaultObjectPool<ProcessedData>(new ProcessedDataPooledPolicy(), 1000);
         public ProcessingPipeline(
             ILogger<ProcessingPipeline> logger,
-            IServiceScopeFactory serviceScopeFactory
+            IServiceScopeFactory serviceScopeFactory,
+            ICache cache = null
             )
         //ISensorTelemetryRepository repository IServiceScopeFactory это с внешней библиотеки
         {
             _logger = logger;
             _serviceScopeFactory = serviceScopeFactory;
-            //_repository = repository;
+            _cache = cache;
             _logger.LogInformation("ProcessingPipeline initialized");
             CreatePipelineBlocks();
             LinkPipelineBlocks();
-           
         }
         private void CreatePipelineBlocks()
         {
@@ -60,18 +63,7 @@ namespace SmartHome.Infra.DataPipeline
             {
                 try
                 {
-                    Console.WriteLine("ПОЛУЧЕНО СООБЩЕНИЕ ДЛЯ ПАРСИНГА");
-                    var message = JsonSerializer.Deserialize<SensorMessage>(jsonString);
-                    if (message == null)
-                    {
-                        _logger.LogDebug("ПАРСИНГ: Получен null после десериализации");
-                        return null;
-                    }
-
-                    // Логируем успешный парсинг
-                    _logger.LogDebug($"ПАРСИНГ: УСПЕХ - MessageId={message.MessageId}, " +
-                                    $"Messages count={message.Messages?.Count ?? 0}");
-                    return message;
+                    return OptimizedJsonParser.ParseFromString(jsonString);
                 }
                 catch (JsonException ex)
                 {
@@ -102,83 +94,81 @@ namespace SmartHome.Infra.DataPipeline
                     return Enumerable.Empty<ProcessedData>();
                 }
 
-                var processedData = new List<ProcessedData>();
+                var processedData = new List<ProcessedData>(7);// Предварительное выделение
+
                 foreach (var message in sensorMessage.Messages)
                 {
                     if (message.Payload != null)
                     {
-                        // Явно обрабатываем каждый датчик
+                        
                         var payload = message.Payload;
-                        //payload.Add(message.Payload);
 
-                        //foreach (var data in payload)
+                        //if (payload.Humanidity.HasValue)
                         //{
                         //    processedData.Add(new ProcessedData
                         //    {
-                        //        SensorId = $"Sensor_{data.Humanidity}",
+                        //        SensorId = "Humanidity",
                         //        Timestamp = message.Timestamp,
-                        //        Values = data.Humanidity.Value
+                        //        Value = payload.Humanidity.Value
                         //    });
-
                         //}
-                        if (payload.Humanidity.HasValue)
-                        {
-                            processedData.Add(new ProcessedData
-                            {
-                                SensorId = "Humanidity",
-                                Timestamp = message.Timestamp,
-                                Value = payload.Humanidity.Value
-                            });
-                        }
 
-                        if (payload.Temperature.HasValue)
-                        {
-                            processedData.Add(new ProcessedData
-                            {
-                                SensorId = "Temperature",
-                                Timestamp = message.Timestamp,
-                                Value = payload.Temperature.Value
-                            });
-                        }
+                        //if (payload.Temperature.HasValue)
+                        //{
+                        //    processedData.Add(new ProcessedData
+                        //    {
+                        //        SensorId = "Temperature",
+                        //        Timestamp = message.Timestamp,
+                        //        Value = payload.Temperature.Value
+                        //    });
+                        //}
 
-                        if (payload.Pressure.HasValue)
-                        {
-                            processedData.Add(new ProcessedData
-                            {
-                                SensorId = "Pressure",
-                                Timestamp = message.Timestamp,
-                                Value = payload.Pressure.Value
-                            });
-                        }
+                        //if (payload.Pressure.HasValue)
+                        //{
+                        //    processedData.Add(new ProcessedData
+                        //    {
+                        //        SensorId = "Pressure",
+                        //        Timestamp = message.Timestamp,
+                        //        Value = payload.Pressure.Value
+                        //    });
+                        //}
 
-                        // Добавьте остальные датчики по аналогии...
-                        if (payload.Motion.HasValue)
-                        {
-                            processedData.Add(new ProcessedData
-                            {
-                                SensorId = "Motion",
-                                Timestamp = message.Timestamp,
-                                Value = payload.Motion.Value
-                            });
-                        }
-                        if (payload.Light.HasValue)
-                        {
-                            processedData.Add(new ProcessedData
-                            {
-                                SensorId = "Light",
-                                Timestamp = message.Timestamp,
-                                Value = payload.Light.Value
-                            });
-                        }
-                        if (payload.Smokedetector.HasValue)
-                        {
-                            processedData.Add(new ProcessedData
-                            {
-                                SensorId = "Smokedetektor",
-                                Timestamp = message.Timestamp,
-                                Value = payload.Smokedetector.Value
-                            });
-                        }
+                        //// Добавьте остальные датчики по аналогии...
+                        //if (payload.Motion.HasValue)
+                        //{
+                        //    processedData.Add(new ProcessedData
+                        //    {
+                        //        SensorId = "Motion",
+                        //        Timestamp = message.Timestamp,
+                        //        Value = payload.Motion.Value
+                        //    });
+                        //}
+                        //if (payload.Light.HasValue)
+                        //{
+                        //    processedData.Add(new ProcessedData
+                        //    {
+                        //        SensorId = "Light",
+                        //        Timestamp = message.Timestamp,
+                        //        Value = payload.Light.Value
+                        //    });
+                        //}
+                        //if (payload.Smokedetector.HasValue)
+                        //{
+                        //    processedData.Add(new ProcessedData
+                        //    {
+                        //        SensorId = "Smokedetektor",
+                        //        Timestamp = message.Timestamp,
+                        //        Value = payload.Smokedetector.Value
+                        //    });
+                        //}
+                        AddIfHasValue(processedData, "Humanidity", message.Timestamp, payload.Humanidity);
+                        AddIfHasValue(processedData, "Temperature", message.Timestamp, payload.Temperature);
+                        AddIfHasValue(processedData, "Pressure", message.Timestamp, payload.Pressure);
+                        AddIfHasValue(processedData, "Motion", message.Timestamp, payload.Motion);
+                        AddIfHasValue(processedData, "Light", message.Timestamp, payload.Light);
+                        AddIfHasValue(processedData, "Smokedetektor", message.Timestamp, payload.Smokedetector);
+
+
 
                     }
                 }
@@ -275,7 +265,26 @@ namespace SmartHome.Infra.DataPipeline
                 throw;
             }
         }
-
+        // Метод для добавления данных с использованием пула объектов
+        private void AddIfHasValue(List<ProcessedData> list, string sensorId,
+                                   DateTime timestamp, double? value)
+        {
+            if (value.HasValue)
+            {
+                // Берем объект из пула вместо создания нового
+                //var data = _processedDataPool.Get();
+                //data.SensorId = sensorId;
+                //data.Timestamp = timestamp;
+                //data.Value = value.Value;
+                var data = new ProcessedData
+                    {
+                     SensorId = sensorId,
+                     Timestamp = timestamp,
+                     Value = value.Value
+                    };
+                list.Add(data);
+            }
+        }
         public async Task ProcessDataAsync(string data)
         {
             Console.WriteLine("ИДЕТ в конвейер");
