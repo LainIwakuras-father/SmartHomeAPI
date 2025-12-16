@@ -15,15 +15,7 @@ namespace SmartHome.Infra.Migrations
                 name: "PK_SensorTelemetry",
                 table: "SensorTelemetry");
 
-            migrationBuilder.AlterColumn<int>(
-                name: "Id",
-                table: "SensorTelemetry",
-                type: "integer",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "integer")
-                .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
-
+            // 3. Добавляем новый составной PK (Id + Time)
             migrationBuilder.AddPrimaryKey(
                 name: "PK_SensorTelemetry",
                 table: "SensorTelemetry",
@@ -32,31 +24,34 @@ namespace SmartHome.Infra.Migrations
             // Создаем индексы
             migrationBuilder.CreateIndex(
                 name: "ix_sensortelemetry_time",
-                table: "sensor_telemetry",
+                table: "SensorTelemetry",
                 column: "Time");
 
             migrationBuilder.CreateIndex(
                 name: "ix_sensortelemetry_sensorid_time",
-                table: "sensor_telemetry",
+                table: "SensorTelemetry",
                 columns: new[] { "SensorId", "Time" });
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+
+            // 1. Удаляем индексы (добавлено)
+            migrationBuilder.DropIndex(
+                name: "ix_sensortelemetry_sensorid_time",
+                table: "SensorTelemetry");
+
+            migrationBuilder.DropIndex(
+                name: "ix_sensortelemetry_time",
+                table: "SensorTelemetry");
+
+
             migrationBuilder.DropPrimaryKey(
                 name: "PK_SensorTelemetry",
                 table: "SensorTelemetry");
 
-            migrationBuilder.AlterColumn<int>(
-                name: "Id",
-                table: "SensorTelemetry",
-                type: "integer",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "integer")
-                .OldAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
-
+         
             migrationBuilder.AddPrimaryKey(
                 name: "PK_SensorTelemetry",
                 table: "SensorTelemetry",
