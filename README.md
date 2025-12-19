@@ -1,7 +1,6 @@
 # SmartHome
-
-1.скачать Docker и docker-compose
-2.скачать dotnet-ef для миграций
+1.скачать Docker и docker-compose \
+2.скачать dotnet-ef для миграций \
 3.скачать Prosys simulation server version 5.6.0-6 
 
 
@@ -12,7 +11,6 @@ docker-compose -f ./docker-compose.monitoring.yml
 #обновляем миграции
 dotnet ef database update -s SmartHome.API -p SmartHome.Infra
 ```
-
 4. заходите в БД например через psql 
 ```bash
 docker exec -it timescaledb psql -U postgres -d industrial -c "SELECT create_hypertable('\"SensorTelemetry\"', 'Time', chunk_time_interval => INTERVAL '1 days', if_not_exists => TRUE, create_default_indexes => FALSE);"
@@ -26,7 +24,7 @@ docker exec -it timescaledb psql -U postgres -d industrial -c "SELECT create_hyp
  (1,public,SensorTelemetry,t)
 (1 row)
 ```
-5.вводите команду создания гипертаблицы с вашими настройками
+5. вводите команду создания гипертаблицы с вашими настройками
 ```bash
 SELECT create_hypertable(
     '"SensorTelemetry"',        -- Имя таблицы с учетом регистра
@@ -58,7 +56,7 @@ protected override void Up(MigrationBuilder migrationBuilder)
 ```
 
 
-6.БЕНЧМАРК производительности приложения
+6. БЕНЧМАРК производительности приложения
 запуск осуществляется таким образом:
 ```
 cd SmartHome.Testscd 
