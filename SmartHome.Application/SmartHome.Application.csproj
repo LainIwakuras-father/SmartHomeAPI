@@ -5,5 +5,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SmartHome.Core\SmartHome.Core.csproj" />
+    <ProjectReference Include="..\SmartHome.Infra\SmartHome.Infra.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.4" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.1.2" />
+  </ItemGroup>
 
 </Project>

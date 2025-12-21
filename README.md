@@ -69,3 +69,7 @@ cd SmartHome.API
 dotnet run
 ```
 данные в базе 
+
+
+## TODO:
+ - Таблицу SecurityAudit сделать гипертаблицей 
