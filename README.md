@@ -73,3 +73,17 @@ dotnet run
 
 ## TODO:
  - Таблицу SecurityAudit сделать гипертаблицей 
+
+
+ ## VUE FRONTEND 
+ запустить в окружении разработчика
+ 1. скачать NPM NodeJS
+ 2. команды ввести
+ ```bash
+ npm install
+ npm run dev
+ ```
+ для разработки скачать линтер
+ ```
+ npm install -D eslint eslint-plugin-vue @vue/eslint-config-prettier
+ ```

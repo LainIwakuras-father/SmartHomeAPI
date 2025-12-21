@@ -364,26 +364,4 @@ FodyWeavers.xsd
 /ssl
 
 # Logs
-fronted-vue-js/logs
-fronted-vue-js/*.log
-fronted-vue-js/npm-debug.log*
-fronted-vue-js/yarn-debug.log*
-fronted-vue-js/yarn-error.log*
-fronted-vue-js/pnpm-debug.log*
-fronted-vue-js/lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-fronted-vue-js/.vscode/*
-fronted-vue-js/!.vscode/extensions.json
-fronted-vue-js/.idea
-fronted-vue-js/.DS_Store
-fronted-vue-js/*.suo
-fronted-vue-js/*.ntvs*
-fronted-vue-js/*.njsproj
-fronted-vue-js/*.sln
-fronted-vue-js/*.sw?

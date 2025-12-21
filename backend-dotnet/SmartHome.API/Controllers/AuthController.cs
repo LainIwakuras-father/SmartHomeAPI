@@ -63,7 +63,7 @@ namespace SmartHome.API.Controllers
         //     }
         //     return Unauthorized("Неверные учетные данные.");
             var token = await _authService.Login(request.Username,request.Password);
-            return Ok(token);
+            return Ok(new { Token = token });
 
 
 

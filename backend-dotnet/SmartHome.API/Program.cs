@@ -190,7 +190,24 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("AdminOnly", policy => 
         policy.RequireRole("Administrator"));
 });
-
+// В начале конфигурации сервисов добавьте:
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowVueFrontend",
+        builder =>
+        {
+            builder.WithOrigins(
+                    "http://localhost:3000",
+                     "http://localhost:3001",     // Vite dev server
+                    "http://localhost:5173",      // Другой порт Vite
+                    "http://localhost:8080"       // Vue CLI по умолчанию
+                )
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials()
+                .WithExposedHeaders("Authorization"); // Разрешаем заголовок Authorization
+        });
+});
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
@@ -228,6 +245,7 @@ catch (Exception ex)
 //app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
 // ✅ ВАЖНО: Добавьте правильный порядок middleware
 app.UseRouting();
+app.UseCors("AllowVueFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
