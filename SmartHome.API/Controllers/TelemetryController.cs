@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,6 +17,7 @@ namespace SmartHome.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize] // Требует аутентификации для всех методов
     public class TelemetryController : ControllerBase
     {
         private readonly IServiceScopeFactory _serviceScopeFactory;
@@ -41,6 +43,7 @@ namespace SmartHome.API.Controllers
 
         // GET: api/TelemetryController
         [HttpGet("history")]
+        [Authorize(Policy = "UserOrAdmin")]
         public async Task<ActionResult<IEnumerable<SensorTelemetry>>> GetSensorTelemetry(
             [FromQuery] TelemetryHistoryRequest request)
         {
@@ -68,6 +71,7 @@ namespace SmartHome.API.Controllers
 
         // Новый endpoint: получить последнее значение (быстро из кеша, fallback в БД)
         [HttpGet("{id}/latest")]
+        [Authorize(Policy = "UserOrAdmin")]
         public async Task<ActionResult<SensorTelemetry>> GetLatest(string id)
         {
             try
@@ -94,6 +98,7 @@ namespace SmartHome.API.Controllers
             }
         }
         [HttpGet("{id}/data")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task GetSensorDataStream(string id)
         {
             // Server-Sent Events для потоковой передачи

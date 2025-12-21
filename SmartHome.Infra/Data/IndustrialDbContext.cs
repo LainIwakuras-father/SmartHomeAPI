@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SmartHome.Core.Entities;
+using SmartHomeAPI.Core.Entities;
 
 namespace SmartHome.Infra.Data
 {
@@ -7,6 +8,9 @@ namespace SmartHome.Infra.Data
     {
         public DbSet<SensorTelemetry> SensorTelemetry { get; set; }
         public DbSet<Sensor> Sensors { get; set; }
+        public DbSet<User> Users { get; set; }
+
+        public DbSet<SecurityAuditRecord> SecurityAudits {get;set;}
 
         public IndustrialDbContext() { }
         public IndustrialDbContext(DbContextOptions<IndustrialDbContext> options) : base(options) { }
@@ -40,6 +44,70 @@ namespace SmartHome.Infra.Data
                 entity.HasKey(e => e.Id);
                 entity.HasIndex(e => e.SensorId).IsUnique();
             });
+
+
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Username)
+                .HasDatabaseName("ix_users_username");
+                entity.HasIndex(e => e.Email).IsUnique()
+                .HasDatabaseName("ix_users_email");
+                entity.HasIndex(e => e.Role)
+                .HasDatabaseName("ix_users_role");
+                entity.HasIndex(e => e.CreatedAt)
+                .HasDatabaseName("ix_users_createdat");
+                // Настройка свойств
+                entity.Property(e => e.Username)
+                    .IsRequired()
+                    .HasMaxLength(50);
+                    
+                entity.Property(e => e.Email)
+                    .IsRequired()
+                    .HasMaxLength(100);
+                    
+                entity.Property(e => e.HashPassword)
+                    .IsRequired()
+                    .HasMaxLength(255);
+                    
+                entity.Property(e => e.Role)
+                    .HasConversion<int>(); 
+                    
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                    .ValueGeneratedOnAdd();
+                    
+                entity.Property(e => e.UpdatedAt)
+                    .ValueGeneratedOnUpdate();
+            });
+
+            modelBuilder.Entity<SecurityAuditRecord>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                
+                // Индексы
+                entity.HasIndex(e => e.Timestamp)
+                .HasDatabaseName("ix_securityaudits_timestamp");
+                entity.HasIndex(e => e.UserId)
+                .HasDatabaseName("ix_securityaudits_userid");
+                entity.HasIndex(e => e.Action)
+                .HasDatabaseName("ix_securityaudits_action");
+                entity.HasIndex(e => e.IsSuccessful)
+                .HasDatabaseName("ix_securityaudits_issuccessful");
+                // Настройка свойств
+                entity.Property(e => e.Timestamp)
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                    .ValueGeneratedOnAdd();
+                entity.Property(e => e.IpAddress)
+                    .HasMaxLength(45);
+                    // Внешний ключ на User
+                entity.HasOne(e => e.User)
+                    .WithMany(u => u.SecurityAudits)
+                    .HasForeignKey(e => e.UserId)
+                    .OnDelete(DeleteBehavior.SetNull);
+                 // При удалении пользователя оставляем запись аудита
+            });
+
         }
 
     }

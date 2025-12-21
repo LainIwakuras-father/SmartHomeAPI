@@ -25,14 +25,18 @@ services:
       - "15672:15672" # Management UI port
       - "1883:1883"   # MQTT
       - "8883:8883"   # MQTT over SSL
+      - "15675:15675" # MQTT WebSocket
+      - "15676:15676" # MQTT WebSocket SSL
     environment:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin
       RABBITMQ_DEFAULT_VHOST: /
+     
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
       - ./rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
       - ./enabled_plugins:/etc/rabbitmq/enabled_plugins
+      - ./ssl:/etc/rabbitmq/ssl
     networks:
       - industrial_networks
 

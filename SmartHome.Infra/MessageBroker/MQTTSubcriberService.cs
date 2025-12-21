@@ -64,6 +64,7 @@ namespace SmartHome.Infra.MessageBroker
                     .WithClientId($"{_settings.ClientId}-{Guid.NewGuid():N}")
                     .WithCleanSession()
                     .WithProtocolVersion(MqttProtocolVersion.V311)
+                    // .WithTlsOptions()
                     .Build();
 
                 // ✅ ВАЖНО: Принудительно используем MQTT 3.1.1 можно и так и так даже лучше
