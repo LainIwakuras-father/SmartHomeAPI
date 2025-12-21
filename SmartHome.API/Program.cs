@@ -113,6 +113,8 @@ builder.Services.AddSwaggerGen(c =>
                         new string[] {}
                     }
                 });
+                // Кастомный фильтр для автоматической обработки токена
+    // c.OperationFilter<SwaggerTokenOperationFilter>();
 });
 
 builder.Services.AddCors(options =>
