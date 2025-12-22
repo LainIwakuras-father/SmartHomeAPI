@@ -1,0 +1,100 @@
+# prometheus/alerts.yml
+groups:
+  - name: smart_home_critical
+    rules:
+      # Критические алерты
+      - alert: NoSensorData
+        expr: increase(sensor_messages_total[5m]) == 0
+        for: 5m
+        labels:
+          severity: critical
+          source: sensors
+        annotations:
+          summary: "Нет данных от датчиков более 5 минут"
+          description: "Система не получает данные от сенсоров умного дома"
+
+      - alert: RabbitMQDown
+        expr: up{job="rabbitmq"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          source: rabbitmq
+        annotations:
+          summary: "RabbitMQ недоступен"
+          description: "MQTT брокер перестал отвечать"
+
+      - alert: DatabaseDown
+        expr: up{job="postgresql"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          source: postgresql
+        annotations:
+          summary: "База данных недоступна"
+          description: "TimescaleDB перестала отвечать"
+
+  - name: smart_home_warning
+    rules:
+      # Предупреждения
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          source: system
+        annotations:
+          summary: "Высокая загрузка CPU ({{ $value }}%)"
+          description: "Загрузка CPU превысила 80%"
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          source: system
+        annotations:
+          summary: "Высокая загрузка памяти ({{ $value }}%)"
+          description: "Использование памяти превысило 85%"
+
+      - alert: RabbitMQQueueGrowing
+        expr: increase(rabbitmq_queue_messages_ready[10m]) > 1000
+        for: 2m
+        labels:
+          severity: warning
+          source: rabbitmq
+        annotations:
+          summary: "Быстрый рост очереди RabbitMQ"
+          description: "Очередь RabbitMQ растет слишком быстро"
+
+      - alert: SlowDatabaseQueries
+        expr: rate(pg_stat_database_tup_returned_total[5m]) < 1
+        for: 5m
+        labels:
+          severity: warning
+          source: postgresql
+        annotations:
+          summary: "Медленные запросы к базе данных"
+          description: "Скорость выполнения запросов упала ниже 1 запроса/сек"
+
+  - name: smart_home_info
+    rules:
+      # Информационные алерты
+      - alert: MQTTSpike
+        expr: rate(rabbitmq_queue_messages_published_total[2m]) / rate(rabbitmq_queue_messages_published_total[10m]) > 3
+        for: 1m
+        labels:
+          severity: info
+          source: rabbitmq
+        annotations:
+          summary: "Скачок MQTT сообщений"
+          description: "Количество MQTT сообщений выросло в 3 раза"
+
+      - alert: DiskSpaceWarning
+        expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100 > 90
+        for: 10m
+        labels:
+          severity: info
+          source: system
+        annotations:
+          summary: "Мало свободного места на диске ({{ $value }}%)"
+          description: "Свободное место на диске менее 10%"

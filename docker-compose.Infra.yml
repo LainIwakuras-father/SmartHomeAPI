@@ -48,3 +48,5 @@ volumes:
 networks:
     industrial_networks:
          driver: bridge  
+    monitoring:
+      external: true

@@ -1,14 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Authorization;
-using SmartHome.Infra.Settings;
 using SmartHome.Application.Service;
-using System.Threading.Tasks;
+
 using SmartHome.API.DTOs;
+using SmartHome.API.CustomMetrics;
 using SmartHome.Core.Interfaces;
 using SmartHome.Core.Domain;
 
@@ -39,7 +34,7 @@ namespace SmartHome.API.Controllers
         {
 
             var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
-
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             try
             {
                 await _authService.Register(
@@ -47,6 +42,10 @@ namespace SmartHome.API.Controllers
                     request.Email,
                     request.Password,
                     request.Role);
+
+                // Записываем метрику успешной регистрации
+                SmartHomeMetrics.RecordMessageProcessed("user_registration", "success");
+                SmartHomeMetrics.RecordProcessingDuration("registration", stopwatch.Elapsed.TotalSeconds);
 
                 // Логируем создание пользователя
                 await _auditService.LogEventAsync(new SecurityEvent
@@ -64,7 +63,9 @@ namespace SmartHome.API.Controllers
             }
             catch (Exception ex)
             {
-
+                // Записываем метрику неудачной регистрации
+                SmartHomeMetrics.RecordMessageProcessed("user_registration", "failure");
+                SmartHomeMetrics.RecordDatabaseError();
                 await _auditService.LogEventAsync(new SecurityEvent
                 {
                     UserName = "System",
@@ -85,22 +86,22 @@ namespace SmartHome.API.Controllers
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
             var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
-            // var token = await _authService.Login(request.Username,request.Password);
-            // return Ok(new { Token = token });
             try
             {
                 
                 if (await _auditService.HasExcessiveFailedAttemptsAsync(request.Username))
                 {
+                    SmartHomeMetrics.RecordAuthFailure(request.Username, "rate_limit");
                     await _auditService.LogSecurityBreachAsync(
                         "AuthController",
-                        $"Excessive failed login attempts for user: {request.Username}",
+                        $"Неудачная попытка входа user: {request.Username}",
                         SecuritySeverity.High);
 
                     return Unauthorized(new
                     {
-                        Message = "Account temporarily locked due to multiple failed attempts"
+                        Message = "Слишком много неудачных попыток входа"
                     });
                 }
 
@@ -108,7 +109,10 @@ namespace SmartHome.API.Controllers
 
                 if (token != null)
                 {
-                   
+                    // Записываем метрики успешного входа
+                    // SmartHomeMetrics.RecordAuthSuccess(request.Username, userRole);
+                    SmartHomeMetrics.RecordJwtTokenIssued();
+                    SmartHomeMetrics.RecordProcessingDuration("login", stopwatch.Elapsed.TotalSeconds);
                     await _auditService.LogLoginAttemptAsync(
                         request.Username,
                         true,
@@ -119,27 +123,27 @@ namespace SmartHome.API.Controllers
                 }
                 else
                 {
-                    
+                    SmartHomeMetrics.RecordAuthFailure(request.Username, "invalid_credentials");
                     await _auditService.LogLoginAttemptAsync(
                         request.Username,
                         false,
                         ipAddress,
-                        "Invalid credentials");
+                        "Неверные Логин или пароль");
 
-                    return Unauthorized("Invalid credentials");
+                    return Unauthorized("Неверные Логин или пароль");
                 }
             }
             catch (Exception ex)
             {
-                
+                SmartHomeMetrics.RecordAuthFailure(request.Username, "exception");
                 await _auditService.LogLoginAttemptAsync(
                     request.Username,
                     false,
                     ipAddress,
                     $"Login error: {ex.Message}");
 
-                _logger.LogError(ex, "Login failed for user: {Username}", request.Username);
-                return Unauthorized("Login failed");
+                _logger.LogError(ex, "Login Ошибка для user: {Username}", request.Username);
+                return Unauthorized("Login Ошибка");
             }
         }
            

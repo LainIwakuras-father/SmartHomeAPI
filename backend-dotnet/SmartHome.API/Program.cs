@@ -19,6 +19,7 @@ using SmartHome.API.Controllers;
 
 using SmartHome.Infra.Cache;
 using SmartHome.Application.Service;
+using SmartHome.API.Middleware;
 
 
 Console.WriteLine("Starting..");
@@ -205,6 +206,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Используем middleware для метрик
+app.UseMiddleware<MetricsMiddleware>();
 app.UseHttpMetrics(options =>
 {
     options.AddCustomLabel("host", context => context.Request.Host.Host);

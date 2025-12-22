@@ -59,7 +59,7 @@ protected override void Up(MigrationBuilder migrationBuilder)
 6. БЕНЧМАРК производительности приложения
 запуск осуществляется таким образом:
 ```
-cd SmartHome.Testscd 
+cd SmartHome.Tests
 dotnet run -c Release
 ```
 

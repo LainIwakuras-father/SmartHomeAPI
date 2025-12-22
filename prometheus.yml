@@ -1,13 +1,39 @@
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
+
 scrape_configs:
+# .NET API метрики
   - job_name: "industrial-api"
     metrics_path: "/metrics"
     static_configs:
      - targets: ["host.docker.internal:9091"]
     scrape_interval: 5s
+     # PostgreSQL/TimescaleDB
   - job_name: "postgresql"
     static_configs:
      - targets: ["host.docker.internal:9187"]
-    
+    scrape_interval: 30s
+    # RabbitMQ
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['rabbitmq-exporter:9419']
+    scrape_interval: 15s
+
+
+  # # Node (системные метрики)
+  # - job_name: 'node'
+  #   static_configs:
+  #     - targets: ['node-exporter:9100']
+  #   scrape_interval: 30s
+  # # Docker контейнеры (опционально)
+  # - job_name: 'cadvisor'
+  #   static_configs:
+  #     - targets: ['cadvisor:8080']  # Если добавите cAdvisor
+  #   scrape_interval: 30s

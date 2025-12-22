@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using SmartHome.Core.Interfaces;
 using SmartHome.API.DTOs;
+using SmartHome.API.CustomMetrics;
 
 namespace SmartHome.API.Controllers
 {
@@ -28,11 +29,15 @@ namespace SmartHome.API.Controllers
             [FromQuery] int skip = 0,
             [FromQuery] int take = 100)
         {
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             try
             {
                 var events = await _auditService.GetEventsAsync(
                     from, to, user, action, isSuccessful, skip, take);
 
+
+                SmartHomeMetrics.RecordMessageProcessed("audit_query", "success");
+                SmartHomeMetrics.RecordProcessingDuration("audit_events", stopwatch.Elapsed.TotalSeconds);
                 var eventDtos = events.Select(e => new AuditEventDto
                 {
                     Id = e.Id,
@@ -49,6 +54,8 @@ namespace SmartHome.API.Controllers
             }
             catch (Exception ex)
             {
+                SmartHomeMetrics.RecordMessageProcessed("audit_query", "error");
+                SmartHomeMetrics.RecordDatabaseError();
                 return StatusCode(500, new { error = ex.Message });
             }
         }

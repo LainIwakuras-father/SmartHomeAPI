@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using SmartHome.API.CustomMetrics;
 using SmartHome.Core.Entities;
 using SmartHome.Core.Interfaces;
 using SmartHome.Infra.Data;
@@ -52,17 +53,21 @@ namespace SmartHome.API.Controllers
             {
                 return BadRequest("Дурак время перепутал");
             }
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             try
             {
                 var history = await _repository.GetHistoryTelemetry(
                     request.SensorId,
                     request.From,
                     request.To);
-
+                SmartHomeMetrics.RecordMessageProcessed("telemetry_query", "success");
+                SmartHomeMetrics.RecordProcessingDuration("telemetry_history", stopwatch.Elapsed.TotalSeconds);
                 return Ok(history);
             }
             catch (Exception ex)
             {
+                SmartHomeMetrics.RecordMessageProcessed("telemetry_query", "error");
+                SmartHomeMetrics.RecordDatabaseError();
                 _logger.LogError(ex, "Error retrieving telemetry history");
                 return StatusCode(500, "Internal server error");
             }
