@@ -61,7 +61,11 @@ builder.Services.AddDbContext<IndustrialDbContext>(options =>
 builder.Services.AddScoped<IPasswordHasher, BcryptPasswordHasher>();
 builder.Services.AddScoped<IJWTService, JWTService>();
 builder.Services.AddScoped<AuthService>();
-builder.Services.AddScoped<IUserRepository, UserRepository>(); 
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ISecurityAuditRepository, SecurityAuditRepository>();
+builder.Services.AddScoped<ISecurityAuditService, SecurityAuditService>();
+// TODO: Если нужен Background Service для очистки старых записей можно потом реализовать
+// builder.Services.AddHostedService<AuditCleanupService>();
 builder.Services.AddScoped<ISensorsRepository, SensorsRepository>();
 builder.Services.AddScoped<ISensorTelemetryRepository, SensorTelemetryRepository>();
 //добавляем кеш
@@ -155,29 +159,7 @@ builder.Services.AddAuthentication(options =>
         NameClaimType = System.Security.Claims.ClaimTypes.Name,
         RoleClaimType = System.Security.Claims.ClaimTypes.Role
     };
-    // // Добавьте события для отладки
-    // options.Events = new JwtBearerEvents
-    // {
-    //     OnAuthenticationFailed = context =>
-    //     {
-    //         Console.WriteLine($"OnAuthenticationFailed: {context.Exception.Message}");
-    //         return Task.CompletedTask;
-    //     },
-    //     OnTokenValidated = context =>
-    //     {
-    //         Console.WriteLine($"OnTokenValidated - User: {context.Principal.Identity?.Name}");
-    //         foreach (var claim in context.Principal.Claims)
-    //         {
-    //             Console.WriteLine($"  Claim: {claim.Type} = {claim.Value}");
-    //         }
-    //         return Task.CompletedTask;
-    //     },
-    //     OnChallenge = context =>
-    //     {
-    //         Console.WriteLine($"OnChallenge: {context.Error}, {context.ErrorDescription}");
-    //         return Task.CompletedTask;
-    //     }
-    // };
+    
 });
 
 builder.Services.AddAuthorization(options =>
@@ -185,10 +167,18 @@ builder.Services.AddAuthorization(options =>
     // Определение политик на основе ролей (RBAC)
     options.AddPolicy("UserOnly", policy => 
         policy.RequireRole("User"));
+
+    options.AddPolicy("AuditorOnly", policy =>
+    policy.RequireRole("Auditor"));
+
+    options.AddPolicy("AdminOrAuditor", policy =>
+        policy.RequireRole("Administrator", "Auditor"));
+
     options.AddPolicy("UserOrAdmin", policy => 
         policy.RequireRole("User", "Administrator"));
+        
     options.AddPolicy("AdminOnly", policy => 
-        policy.RequireRole("Administrator"));
+        policy.RequireRole("Administrator")); //Auditor
 });
 // В начале конфигурации сервисов добавьте:
 builder.Services.AddCors(options =>

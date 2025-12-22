@@ -72,13 +72,12 @@ export const useAuthStore = defineStore('auth', {
         if (this.token) {
           const payload = JSON.parse(atob(this.token.split('.')[1]))
           this.user = {
-            username: payload.unique_name || payload.username,
-            email: payload.email,
-            role: payload.role,
+            username: payload.unique_name,
+            role: payload.role
           }
         }
       } catch (error) {
-        console.error('Failed to fetch user:', error)
+        // console.error('Failed to fetch user:', error)
         this.error = error.response?.data?.message || 'Login failed'
         return { success: false, error: this.error }
       } finally {

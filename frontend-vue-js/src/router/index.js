@@ -9,6 +9,7 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: () => import('@/views/Login.vue'),
+    meta: { requiresAuth: false }
   },
   {
     path: '/register',
@@ -20,6 +21,15 @@ const routes = [
     name: 'Dashboard-HomeAssistant',
     component: () => import('@/views/Home.vue'),
     meta: { requiresAuth: true },
+  },
+  {
+      path: '/audit-security',
+      name: 'AuditSecurity',
+      component: () => import('@/views/AuditSecurity.vue'),
+      meta: { 
+        requiresAuth: true,
+        requiredRoles: ['Administrator', 'Auditor'] // Роли из вашего токена
+      }
   },
   {
     path: '/:pathMatch(.*)*',
@@ -35,6 +45,7 @@ const router = createRouter({
 // Навигационные хуки
 router.beforeEach((to, from, next) => {
 
+  
   const isAuthenticated = !!localStorage.getItem('jwt_token')
 
   if (to.meta.requiresAuth && !isAuthenticated) {

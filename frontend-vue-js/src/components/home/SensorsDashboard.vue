@@ -1,20 +1,20 @@
 <template>
   <section class="card">
     <div class="card-header">
-      <Icon name="sensors" class="w-6 h-6 text-green-600" />
+      <div class="header-icon">📡</div>
       <h2 class="card-title">Датчики</h2>
       <button 
-        @click="refreshAll" 
-        class="btn btn-sm btn-outline ml-auto"
+        class="btn btn-sm btn-outline ml-auto" 
         :disabled="store.isLoading"
+        @click="refreshAll"
       >
-        <Icon name="refresh" class="w-4 h-4" />
+        <span class="refresh-icon">🔄</span>
         Обновить
       </button>
     </div>
     
     <div v-if="store.isLoading && store.sensors.length === 0" class="loading-skeleton">
-      <div v-for="i in 3" :key="i" class="skeleton-item"></div>
+      <div v-for="i in 5" :key="i" class="skeleton-item"></div>
     </div>
     
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -36,7 +36,7 @@ import SensorCard from '@/components/sensors/SensorCard.vue'
 const store = useSensorsStore()
 
 const refreshSensor = async (sensor) => {
-  await store.fetchLatestReading(sensor.sensorId) // Передаем sensorId (строку)
+  await store.fetchLatestReading(sensor.sensorId)
 }
 
 const refreshAll = async () => {
@@ -48,3 +48,41 @@ onMounted(async () => {
   await store.fetchAllLatestReadings()
 })
 </script>
+
+<style scoped>
+.card {
+  @apply bg-white rounded-xl shadow-sm border border-gray-200;
+}
+
+.card-header {
+  @apply flex items-center gap-3 px-6 py-4 border-b border-gray-200;
+}
+
+.header-icon {
+  @apply text-xl;
+}
+
+.card-title {
+  @apply text-lg font-semibold text-gray-800 flex-1;
+}
+
+.btn {
+  @apply px-3 py-1.5 rounded-lg border transition-colors text-sm font-medium;
+}
+
+.btn-outline {
+  @apply border-gray-300 text-gray-700 hover:bg-gray-50;
+}
+
+.btn:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+.loading-skeleton {
+  @apply p-6 space-y-3;
+}
+
+.skeleton-item {
+  @apply h-16 bg-gray-200 rounded-lg animate-pulse;
+}
+</style>

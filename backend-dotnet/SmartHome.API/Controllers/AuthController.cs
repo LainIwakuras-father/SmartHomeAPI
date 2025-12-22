@@ -9,6 +9,8 @@ using SmartHome.Infra.Settings;
 using SmartHome.Application.Service;
 using System.Threading.Tasks;
 using SmartHome.API.DTOs;
+using SmartHome.Core.Interfaces;
+using SmartHome.Core.Domain;
 
 namespace SmartHome.API.Controllers
 {
@@ -18,80 +20,129 @@ namespace SmartHome.API.Controllers
     {
         
         private readonly AuthService _authService;
-        
-        // В реальной системе здесь был бы сервис для проверки пользователей из БД
+        private readonly ISecurityAuditService _auditService;
+        private readonly ILogger<AuthController> _logger;
+
         public AuthController(
-            
-            AuthService authService)
+
+            AuthService authService,
+            ISecurityAuditService auditService,
+            ILogger<AuthController> logger)
         {
-            
             _authService = authService;
+            _auditService = auditService;
+            _logger = logger;
         }
         [HttpPost("register")]
         [AllowAnonymous]
         public async Task<IActionResult> Register([FromBody] RegisterRequest request)
         {
-            
-           await _authService.Register(
-            request.Username,
-            request.Email,
-            request.Password,
-             request.Role);
-           return NoContent();
+
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+            try
+            {
+                await _authService.Register(
+                    request.Username,
+                    request.Email,
+                    request.Password,
+                    request.Role);
+
+                // Логируем создание пользователя
+                await _auditService.LogEventAsync(new SecurityEvent
+                {
+                    UserName = "System",
+                    Action = "USER_CREATED",
+                    Resource = request.Username,
+                    IpAddress = ipAddress,
+                    IsSuccessful = true,
+                    Details = $"New user registered: {request.Username}",
+                    Timestamp = DateTime.UtcNow
+                });
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+
+                await _auditService.LogEventAsync(new SecurityEvent
+                {
+                    UserName = "System",
+                    Action = "USER_CREATION_FAILED",
+                    Resource = request.Username,
+                    IpAddress = ipAddress,
+                    IsSuccessful = false,
+                    Details = $"Registration failed: {ex.Message}",
+                    Timestamp = DateTime.UtcNow
+                });
+
+                return BadRequest(new { Message = ex.Message });
+            }
         }
 
         [HttpPost("login")]
         [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-        // // ЗАГЛУШКА: Вместо этого должна быть проверка логина/пароля в базе данныx
-        
-        //     if (request.Username == "operator" && request.Password == "operator123")
-        //     {
-        //     var token = GenerateJwtToken(request.Username, "Operator");
-        //     return Ok(new { Token = token });
-        //     }
-        //     else if (request.Username == "engineer" && request.Password == "engineer123")
-        //     {
-        //     var token = GenerateJwtToken(request.Username, "Engineer");
-        //     return Ok(new { Token = token });
-        //     }
-        //     else if (request.Username == "admin" && request.Password == "admin123")
-        //     {
-        //     var token = GenerateJwtToken(request.Username, "Administrator");
-        //     return Ok(new { Token = token });
-        //     }
-        //     return Unauthorized("Неверные учетные данные.");
-            var token = await _authService.Login(request.Username,request.Password);
-            return Ok(new { Token = token });
+            var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString();
 
+            // var token = await _authService.Login(request.Username,request.Password);
+            // return Ok(new { Token = token });
+            try
+            {
+                
+                if (await _auditService.HasExcessiveFailedAttemptsAsync(request.Username))
+                {
+                    await _auditService.LogSecurityBreachAsync(
+                        "AuthController",
+                        $"Excessive failed login attempts for user: {request.Username}",
+                        SecuritySeverity.High);
 
+                    return Unauthorized(new
+                    {
+                        Message = "Account temporarily locked due to multiple failed attempts"
+                    });
+                }
 
+                var token = await _authService.Login(request.Username, request.Password);
 
+                if (token != null)
+                {
+                   
+                    await _auditService.LogLoginAttemptAsync(
+                        request.Username,
+                        true,
+                        ipAddress,
+                        "Login successful");
 
+                    return Ok(new { Token = token });
+                }
+                else
+                {
+                    
+                    await _auditService.LogLoginAttemptAsync(
+                        request.Username,
+                        false,
+                        ipAddress,
+                        "Invalid credentials");
+
+                    return Unauthorized("Invalid credentials");
+                }
+            }
+            catch (Exception ex)
+            {
+                
+                await _auditService.LogLoginAttemptAsync(
+                    request.Username,
+                    false,
+                    ipAddress,
+                    $"Login error: {ex.Message}");
+
+                _logger.LogError(ex, "Login failed for user: {Username}", request.Username);
+                return Unauthorized("Login failed");
+            }
         }
-    
-        
-        // [HttpGet("validate")]
-        // [Authorize]
-        // public IActionResult Validate()
-        // {
-        //     var userName = User.Identity.Name;
-        //     var role = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-            
-        //     return Ok(new
-        //     {
-        //         Message = "Токен действителен",
-        //         User = userName,
-        //         Role = role,
-        //         ValidUntil = DateTime.UtcNow.AddMinutes(_jwtSettings.ExpiryMinutes)
-        //     });
-        // }
-
-            
-    }
-
-  
-       
+           
+    }    
     
 }

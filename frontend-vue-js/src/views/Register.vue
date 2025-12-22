@@ -131,11 +131,7 @@ const handleSubmit = async () => {
     return
   }
 
-  if (!form.acceptedTerms) {
-    error.value = 'You must accept the Terms and Conditions'
-    return
-  }
-
+  
   error.value = ''
 
   const result = await authStore.register({

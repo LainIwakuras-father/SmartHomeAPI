@@ -31,9 +31,7 @@ export const sensorsService = {
   getAll() {
     return apiClient.get('/Sensors')
   },
-  // getById(id) {
-  //   return apiClient.get(`/sensors/${id}`)
-  // }
+  
 }
 
 // Телеметрия

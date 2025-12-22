@@ -14,8 +14,8 @@ export const useSystemStore = defineStore('system', () => {
       const { data } = await statusService.getStatus()
       status.value = data
     } catch (err) {
+      console.error('Error fetching system status:', err)
       error.value = err.response?.data?.message || 'Ошибка загрузки статуса'
-      console.error('System status error:', err)
     } finally {
       isLoading.value = false
     }

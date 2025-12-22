@@ -6,7 +6,7 @@ export const useSensorsStore = defineStore('sensors', () => {
   const sensors = ref([])
   const latestReadings = ref({})
   const isLoading = ref(false)
-  const errors = ref({})
+  const error = ref(null)
 
   // Геттер для датчиков с последними показаниями
   const sensorsWithReadings = computed(() => {
@@ -22,22 +22,30 @@ export const useSensorsStore = defineStore('sensors', () => {
       const { data } = await sensorsService.getAll()
       sensors.value = data
     } catch (err) {
-      errors.value.fetch = err.response?.data || 'Ошибка загрузки датчиков'
+      console.error('Error fetching sensors:', err)
+      error.value = err.response?.data || 'Ошибка загрузки датчиков'
     } finally {
       isLoading.value = false
     }
   }
 
-  const fetchLatestReading = async (sensorId) => {
+  const fetchLatestReading = async (sensorName) => {
     try {
-      const { data } = await telemetryService.getLatest(sensorId)
-      latestReadings.value[sensorId] = data
+      const { data } = await telemetryService.getLatest(sensorName)
+      if (data) {
+        latestReadings.value[sensorName] = data
+      }
     } catch (err) {
-      console.error(`Failed to fetch latest for ${sensorId}:`, err)
+      console.error(`Error fetching latest for ${sensorName}:`, err)
+      // Не выбрасываем ошибку, чтобы не ломать весь список
     }
   }
 
   const fetchAllLatestReadings = async () => {
+    if (sensors.value.length === 0) {
+      await fetchSensors()
+    }
+    
     const promises = sensors.value.map(sensor => 
       fetchLatestReading(sensor.sensorId)
     )
@@ -49,7 +57,7 @@ export const useSensorsStore = defineStore('sensors', () => {
     sensorsWithReadings,
     latestReadings,
     isLoading,
-    errors,
+    error,
     fetchSensors,
     fetchLatestReading,
     fetchAllLatestReadings
