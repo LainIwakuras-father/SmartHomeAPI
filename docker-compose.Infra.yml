@@ -1,10 +1,13 @@
 services:
+# Кеш
   redis-cache:
     image: redis:7-alpine
     container_name: redis-cache
     ports:
     - "6379:6379"
-  
+    networks:
+      - industrial_networks
+  #База данных
   timescaledb:
    image: timescale/timescaledb:latest-pg14
    container_name: timescaledb
@@ -16,7 +19,9 @@ services:
       POSTGRES_USER: postgres
    volumes:
    - ~/docker/timescaledb/data:/var/lib/postgresql/data
-
+   networks:
+      - industrial_networks
+#Брокер сообщений
   rabbitmq_queue:
     image: rabbitmq:3-management
     container_name: rabbitmq_queue
@@ -39,14 +44,88 @@ services:
       - ./ssl:/etc/rabbitmq/ssl
     networks:
       - industrial_networks
+#Экспортер Метрик
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--storage.tsdb.retention.time=200h"
+      - "--web.enable-lifecycle"
+    extra_hosts:
+    - "host.docker.internal:172.17.0.1"
+    networks:
+      - industrial_networks
+      
+ 
+#Визуализатор Метрик
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+    networks:
+      - industrial_networks
+#Экспортер с БД
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    ports:
+      - "9187:9187"
+    environment:
+      - DATA_SOURCE_NAME=postgresql://postgres:industrial123@timescaledb:5432/industrial?sslmode=disable
+    networks:
+      - industrial_networks
+  #Экспортер с Очереди сообщений
+  rabbitmq-exporter:
+    image: kbudde/rabbitmq-exporter:latest
+    ports:
+      - "9419:9419"
+    environment:
+      - RABBIT_URL=http://rabbitmq_queue:15672
+      - RABBIT_USER=admin
+      - RABBIT_PASSWORD=admin
+    networks:
+      - industrial_networks
+    #Алерт Менеджер
+  alertmanager:
+    image: prom/alertmanager:latest
+    ports:
+      - "9093:9093"
+    volumes:
+      - alertmanager_data:/alertmanager
+      - ./config-alert.yml:/etc/alertmanager/config.yaml
+    command:
+      - '--config.file=/etc/alertmanager/config.yaml'
+      - '--storage.path=/alertmanager'
+    networks:
+     - industrial_networks
+
+
 
 volumes:
-   rabbitmq_data: 
-   timescaledb_data:
+  prometheus_data:
+  grafana_data:
+  alertmanager_data:
+  rabbitmq_data: 
+  timescaledb_data:
     driver: local
 
 networks:
     industrial_networks:
          driver: bridge  
-    monitoring:
-      external: true
+  

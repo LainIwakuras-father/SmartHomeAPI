@@ -69,7 +69,7 @@ services:
 volumes:
   prometheus_data:
   grafana_data:
-
+  alertmanager_data:
 
 networks:
   monitoring:
