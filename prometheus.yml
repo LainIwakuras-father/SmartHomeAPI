@@ -1,13 +1,66 @@
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
+
+rule_files:
+- "alerts.yml"
+
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
 scrape_configs:
+  # .NET API метрики
   - job_name: "industrial-api"
     metrics_path: "/metrics"
     static_configs:
-     - targets: ["host.docker.internal:9091"]
-    scrape_interval: 5s
+      - targets: ["smarthome-api:9091"]
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: smarthome-api:80
+
+  
+# === ДЕТАЛИЗАЦИЯ СБОРА МЕТРИК ===
+# industrial-api: сбор метрик каждые 10 секунд с основного приложения
+# postgresql: мониторинг БД через экспортер на порту 9187
+# redis: проверка доступности Redis каждые 30 секунд
+# prometheus: самомониторинг системы мониторинга
+
+# Частоты сбора:
+# - Критические метрики: 5-10 секунд
+# - Инфраструктурные метрики: 15-30 секунд
+# - Бизнес-метрики: 1-5 минут
+
+     # PostgreSQL/TimescaleDB
   - job_name: "postgresql"
     static_configs:
-     - targets: ["host.docker.internal:9187"]
-    
+     - targets: ["postgres-exporter:9187"]
+    scrape_interval: 30s
+# Мониторинг Redis
+  # - job_name: 'redis'
+  #   static_configs:
+  #    - targets: ['redis-cache:6379']
+  #   scrape_interval: 30s
+
+    # RabbitMQ
+  - job_name: 'rabbitmq'
+    static_configs:
+      - targets: ['rabbitmq-exporter:9419']
+    scrape_interval: 15s
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 30s
+
+
+
+      

@@ -1,0 +1,71 @@
+{
+  "dashboard": {
+    "title": "SmartHome System Overview",
+    "panels": [
+      {
+        "title": "System Health Status",
+        "type": "stat",
+        "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+        "targets": [{
+          "expr": "up{job=\"industrial-api\"}",
+          "legendFormat": "API Status"
+        }]
+      },
+      {
+        "title": "Active Connections & Users",
+        "type": "gauge",
+        "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+        "targets": [
+          {"expr": "smart_home_active_connections", "legendFormat": "Connections"},
+          {"expr": "smart_home_active_users", "legendFormat": "Users"}
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "steps": [
+                {"color": "green", "value": null},
+                {"color": "yellow", "value": 50},
+                {"color": "red", "value": 100}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "title": "Messages Processing Rate",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 4, "w": 12, "h": 6},
+        "targets": [{
+          "expr": "rate(smart_home_messages_processed_total[5m])",
+          "legendFormat": "{{sensor_type}} - {{status}}"
+        }]
+      },
+      {
+        "title": "Database Operations",
+        "type": "stat",
+        "gridPos": {"x": 0, "y": 10, "w": 4, "h": 4},
+        "targets": [{
+          "expr": "rate(smart_home_database_errors_total[5m])",
+          "legendFormat": "DB Errors/sec"
+        }]
+      },
+      {
+        "title": "Authentication Activity",
+        "type": "graph",
+        "gridPos": {"x": 4, "y": 10, "w": 8, "h": 4},
+        "targets": [
+          {
+            "expr": "rate(smart_home_auth_successes_total[5m])",
+            "legendFormat": "Success - {{username}}"
+          },
+          {
+            "expr": "rate(smart_home_auth_failures_total[5m])",
+            "legendFormat": "Failed - {{username}}"
+          }
+        ]
+      }
+    ],
+    "refresh": "30s",
+    "time": {"from": "now-1h", "to": "now"}
+  }
+}

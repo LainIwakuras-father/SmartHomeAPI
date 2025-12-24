@@ -1,0 +1,53 @@
+# prometheus/alerts.yml
+groups:
+  - name: smart_home_critical
+    rules:
+      # Критические алерты
+    
+      - alert: RabbitMQDown
+        expr: up{job="rabbitmq"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          source: rabbitmq
+        annotations:
+          summary: "RabbitMQ недоступен"
+          description: "MQTT брокер перестал отвечать"
+
+      - alert: DatabaseDown
+        expr: up{job="postgresql"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          source: postgresql
+        annotations:
+          summary: "База данных недоступна"
+          description: "TimescaleDB перестала отвечать"
+
+  - name: smart_home_warning
+    rules:
+      
+      - alert: SlowDatabaseQueries
+        expr: rate(pg_stat_database_tup_returned_total[5m]) < 1
+        for: 5m
+        labels:
+          severity: warning
+          source: postgresql
+        annotations:
+          summary: "Медленные запросы к базе данных"
+          description: "Скорость выполнения запросов упала ниже 1 запроса/сек"
+
+  - name: smart_home_info
+    rules:
+      # Информационные алерты
+      - alert: MQTTSpike
+        expr: rate(rabbitmq_queue_messages_published_total[2m]) / rate(rabbitmq_queue_messages_published_total[10m]) > 3
+        for: 1m
+        labels:
+          severity: info
+          source: rabbitmq
+        annotations:
+          summary: "Скачок MQTT сообщений"
+          description: "Количество MQTT сообщений выросло в 3 раза"
+
+      

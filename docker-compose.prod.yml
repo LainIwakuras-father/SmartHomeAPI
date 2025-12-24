@@ -1,6 +1,6 @@
 services:
   smarthome-api:
-    image: smarthome-api:1.0.0
+    image: smarthome-api:${VERSION:-latest}
     build:
       context: ./backend-dotnet
       dockerfile: Dockerfile

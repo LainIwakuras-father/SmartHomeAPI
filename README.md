@@ -59,7 +59,7 @@ protected override void Up(MigrationBuilder migrationBuilder)
 6. БЕНЧМАРК производительности приложения
 запуск осуществляется таким образом:
 ```
-cd SmartHome.Testscd 
+cd SmartHome.Tests
 dotnet run -c Release
 ```
 
@@ -73,3 +73,29 @@ dotnet run
 
 ## TODO:
  - Таблицу SecurityAudit сделать гипертаблицей 
+
+
+ ## VUE FRONTEND 
+ запустить в окружении разработчика
+ 1. скачать NPM NodeJS
+ 2. команды ввести
+ ```bash
+ npm install
+ npm run dev
+ ```
+ для разработки скачать линтер
+ ```
+ npm install -D eslint eslint-plugin-vue @vue/eslint-config-prettier
+ ```
+
+
+ ЗАПУСК ПРОКТА ЧЕРЕЗ  docker-compose
+ 1. склонировать проект
+ ```bash
+ git clone http://ссылка на проект
+ ```
+ 2. Предварительно вы должны скачать Prosys simulation server version 5.6.0-6 и настроить Pub/sub  
+ 3. запустить docker-compose 
+ ```bash
+ docker-compose -f docker-compose.prod.yml up -d
+ ```
