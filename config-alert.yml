@@ -1,5 +1,42 @@
 route:
-  receiver: 'null'
+  group_by: ['alertname', 'severity']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 1h
+  receiver: 'default-receiver'
+  routes:
+  - match:
+      severity: critical
+    receiver: 'critical-receiver'
+    group_interval: 5s
+    repeat_interval: 5m
+  - match:
+      severity: warning
+    receiver: 'warning-receiver'
+  - match:
+      severity: info
+    receiver: 'info-receiver'
 
 receivers:
-  - name: 'null'
+- name: 'default-receiver'
+  email_configs:
+  - to: 'dol3wsky@gmail.com'
+    from: 'alertmanager@smarthome.local'
+    smarthost: 'smtp.example.com:587'
+    auth_username: 'alertmanager'
+    auth_password: 'password'
+
+- name: 'critical-receiver'
+  email_configs:
+  - to: 'dol3wsky@gmail.com'
+  webhook_configs:
+  - url: 'http://webhook-server:5000/alerts'
+    send_resolved: true
+
+- name: 'warning-receiver'
+  email_configs:
+  - to: 'dol3wsky@gmail.com'
+
+- name: 'info-receiver'
+  webhook_configs:
+  - url: 'http://logging-server:8080/log'

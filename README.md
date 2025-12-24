@@ -87,3 +87,14 @@ dotnet run
  ```
  npm install -D eslint eslint-plugin-vue @vue/eslint-config-prettier
  ```
+
+
+ ЗАПУСК ИЗ КОНТЕЙНЕРА ДВА ВАРИАНТА 
+ 1. без buildx
+ ```bash
+ docker build -t smarthome-api:1.0.0 .
+ ```
+ 2. c buildx(скачать предварительно) 
+ ```bash
+ docker buildx build -t smarthome-api:1.0.0 .
+ ```

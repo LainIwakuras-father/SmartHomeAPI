@@ -387,3 +387,7 @@ fronted-vue-js/*.ntvs*
 fronted-vue-js/*.njsproj
 fronted-vue-js/*.sln
 fronted-vue-js/*.sw?
+
+
+.env
+deploy.sh
