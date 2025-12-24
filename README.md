@@ -97,5 +97,5 @@ dotnet run
  2. Предварительно вы должны скачать Prosys simulation server version 5.6.0-6 и настроить Pub/sub  
  3. запустить docker-compose 
  ```bash
- docker-compose up -d
+ docker-compose -f docker-compose.prod.yml up -d
  ```
