@@ -390,4 +390,5 @@ fronted-vue-js/*.sw?
 
 
 .env
+
 deploy.sh
