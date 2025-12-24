@@ -89,12 +89,13 @@ dotnet run
  ```
 
 
- ЗАПУСК ИЗ КОНТЕЙНЕРА ДВА ВАРИАНТА 
- 1. без buildx
+ ЗАПУСК ПРОКТА ЧЕРЕЗ  docker-compose
+ 1. склонировать проект
  ```bash
- docker build -t smarthome-api:1.0.0 .
+ git clone http://ссылка на проект
  ```
- 2. c buildx(скачать предварительно) 
+ 2. Предварительно вы должны скачать Prosys simulation server version 5.6.0-6 и настроить Pub/sub  
+ 3. запустить docker-compose 
  ```bash
- docker buildx build -t smarthome-api:1.0.0 .
+ docker-compose up -d
  ```
